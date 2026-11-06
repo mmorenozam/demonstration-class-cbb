@@ -2,15 +2,141 @@
   {
     "objectID": "index.html#section",
     "href": "index.html#section",
-    "title": "titulo",
+    "title": "Introduction to GLMM",
     "section": "",
-    "text": "Titulo modulo\n\nMauricio Moreno, PhD"
+    "text": "Lightning Introduction to Generalized Linear Mixed Models\n\nMauricio Moreno, PhD"
+  },
+  {
+    "objectID": "index.html#todays-goals",
+    "href": "index.html#todays-goals",
+    "title": "Introduction to GLMM",
+    "section": "Today’s goals",
+    "text": "Today’s goals\n\nBy the end of this session, you will be able to:\n\nRecognise when your data are grouped (repeated trials, siblings, individuals in social groups) and why that breaks the independence assumption.\nExplain what a random intercept is and what the intraclass correlation tells you.\nChoose between a linear mixed model and a GLMM based on the type of your response.\nInterpret the coefficients of a GLMM as effects for the typical individual.\n\n\n\n\n\n\n\n\nAt the end, we turn these goals into three questions to ask about your own data."
+  },
+  {
+    "objectID": "index.html#what-is-a-linear-model",
+    "href": "index.html#what-is-a-linear-model",
+    "title": "Introduction to GLMM",
+    "section": "What is a linear model?",
+    "text": "What is a linear model?\n\nSimply put, a linear model is a mathematical equation that predicts a continuous dependent variable (\\(y\\)) as a linear combination of one or more predictors (\\(x\\)):\n\\[\ny = \\beta_0 + \\beta_1 X_1 + \\beta_2 X_2 + \\cdots + \\beta_n X_n + \\epsilon\n\\]\n\n\nWhere:\n\n\\(\\beta_0\\): intercept\n\\(\\beta_1, \\dots, \\beta_n\\): effects of the predictors\n\\(\\epsilon\\): residual error, assumed \\(\\epsilon \\sim N(0, \\sigma^2)\\)\n\n\n\n\n\n\n\n\nWhat does “linear” mean?\n\n\n\nLinear does not mean the relationship between \\(x\\) and \\(y\\) has to be a straight line. It means the model is linear in the parameters (\\(\\beta\\)).\nPredictors can be transformed (e.g., \\(X^2\\), \\(\\log X\\)) and it is still a linear model, as long as each \\(\\beta\\) only multiplies a term and is added up:\n\n\\(y = \\beta_0 + \\beta_1 X + \\beta_2 X^2 + \\epsilon\\) ✅ linear (a curve!)\n\\(y = \\beta_0 \\, e^{\\beta_1 X} + \\epsilon\\) ❌ not linear, because \\(\\beta_1\\) sits inside the exponential"
+  },
+  {
+    "objectID": "index.html#one-model-many-names",
+    "href": "index.html#one-model-many-names",
+    "title": "Introduction to GLMM",
+    "section": "One model, many names",
+    "text": "One model, many names\n\nMany methods you already know are special cases of the linear model:\n\nSimple and multiple linear regression: predicts a continuous \\(y\\) from one or more predictors.\nt-test: compares two group means (one binary predictor).\nANOVA: compares two or more group means using categorical predictors.\nANCOVA: combines categorical and continuous predictors to compare group means, adjusting for a covariate.\nGeneralized linear models (GLM): extend the idea to other types of responses, such as binary (logistic regression) or counts (Poisson regression), by linking the mean of \\(y\\) to the predictors through a link function.\n\n\n\n\n\n\n\n\nAll of them assume that observations are independent. What happens when they are not?"
+  },
+  {
+    "objectID": "index.html#a-simple-question",
+    "href": "index.html#a-simple-question",
+    "title": "Introduction to GLMM",
+    "section": "A simple question",
+    "text": "A simple question\n\n\n\n102 lizards. Do males and females differ in the number of dorsal scales?\n\nA two-sample t-test (or lm(dors ~ sex)):\n\nFemales minus males: -0.67 scales\n\\(p\\) = 0.102\n\n\n\n\n\n\n\n\n\nConclusion: no evidence of a sex difference… right?"
+  },
+  {
+    "objectID": "index.html#full-output-t-test",
+    "href": "index.html#full-output-t-test",
+    "title": "Introduction to GLMM",
+    "section": "Full output: t-test",
+    "text": "Full output: t-test\nt.test(dors ~ sex, data = lizard, var.equal = TRUE)\n\n\n\n\n\n\n\n\n\n\nTwo-sample t-test\n\n\nStatistic\nValue\n\n\n\n\nMean (males)\n35.40\n\n\nMean (females)\n34.72\n\n\nDifference (males - females)\n0.67\n\n\n95% CI of the difference\n[-0.14, 1.48]\n\n\nt\n1.65\n\n\ndf\n100\n\n\np-value\n0.102\n\n\n\n\n\n\n\n\nWhere to look:\n\np-value: the one on the previous slide\ndf = 100: R treats all 102 lizards as independent observations"
+  },
+  {
+    "objectID": "index.html#but-wait-who-are-their-mothers",
+    "href": "index.html#but-wait-who-are-their-mothers",
+    "title": "Introduction to GLMM",
+    "section": "But wait… who are their mothers?",
+    "text": "But wait… who are their mothers?\n\nThe 102 lizards come from 29 mothers.\n\n\n\n\n\n\n\n\n\n\nLots of variability between mothers (grey bars = mother averages).\nWithin a mother, males tend to have more scales.\nSiblings are more alike than unrelated lizards: observations are not independent."
+  },
+  {
+    "objectID": "index.html#hierarchical-data",
+    "href": "index.html#hierarchical-data",
+    "title": "Introduction to GLMM",
+    "section": "Hierarchical data",
+    "text": "Hierarchical data\n\n\n\n\n\n\n\n\n“Hierarchical data are obtained when the sample is taken at multiple, hierarchically ordered, levels.”1\n\n\n\n\n\n\nOur lizards:\n\nLevel 2: 29 mothers\n\nLevel 1: 102 lizards (sex measured on each lizard)\n\n\nIn CBB research, for example:\n\nSocial groups → individuals → trials\n\n\nAlso known as:\n\nRepeated measures\nLongitudinal data\nMultilevel data\nClustered or correlated data\n\n\n\n\n\n\n\n\n\nHierarchical data are usually not independent. The key question is: how do we account for the association between observations from the same cluster?\n\n\n\n\n\nVerbeke, G. (2013). Concepts of multilevel, longitudinal, and mixed models. Lecture notes, KU Leuven."
+  },
+  {
+    "objectID": "index.html#option-1-mother-as-a-fixed-effect",
+    "href": "index.html#option-1-mother-as-a-fixed-effect",
+    "title": "Introduction to GLMM",
+    "section": "Option 1: mother as a fixed effect?",
+    "text": "Option 1: mother as a fixed effect?\n\nlm(dors ~ mother + sex, data = lizard)\n\nIt works: the sex effect is now significant (\\(p\\) = 0.009).\nBut it spends 28 parameters just on the mothers.\nAnd we are not interested in these 29 mothers, but in lizard mothers in general.\n\n\n\n\n\n\n\n\nIdea\n\n\nTreat the mothers as a random sample from a population of mothers, and estimate how much they vary."
+  },
+  {
+    "objectID": "index.html#full-output-mother-as-a-fixed-effect",
+    "href": "index.html#full-output-mother-as-a-fixed-effect",
+    "title": "Introduction to GLMM",
+    "section": "Full output: mother as a fixed effect",
+    "text": "Full output: mother as a fixed effect\nfit_fixed &lt;- lm(dors ~ mother + sex, data = lizard)\nanova(fit_fixed)\n\n\n\n\n\n\n\n\n\n\nANOVA table\n\n\nTerm\nDf\nSum Sq\nMean Sq\nF\np-value\n\n\n\n\nmother\n28\n251.74\n8.99\n3.87\n&lt; 0.001\n\n\nsex\n1\n16.73\n16.73\n7.19\n0.009\n\n\nResiduals\n72\n167.37\n2.32\n\n\n\n\n\n\n\n\n\n\nWhere to look:\n\nRow sex: the sex effect, tested after adjusting for mother\nRow mother: Df = 28, the parameters spent on the mothers"
+  },
+  {
+    "objectID": "index.html#the-linear-mixed-model",
+    "href": "index.html#the-linear-mixed-model",
+    "title": "Introduction to GLMM",
+    "section": "The linear mixed model",
+    "text": "The linear mixed model\n\n\n\n\\[\ny_{ij} = \\beta_0 + \\alpha_i + \\beta_1 \\, \\text{sex}_{ij} + \\epsilon_{ij}\n\\]\n\\[\n\\alpha_i \\sim N(0, \\sigma^2_{mother}), \\qquad \\epsilon_{ij} \\sim N(0, \\sigma^2)\n\\]\n\n\\(i\\): mother, \\(j\\): lizard within mother\n\\(\\alpha_i\\): random intercept, each mother has her own baseline\n\n\nlibrary(lmerTest)\nlmer(dors ~ sex + (1 | mother), data = lizard)\nSex effect: -0.83 scales (SE 0.32), \\(p\\) = 0.012"
+  },
+  {
+    "objectID": "index.html#full-output-linear-mixed-model",
+    "href": "index.html#full-output-linear-mixed-model",
+    "title": "Introduction to GLMM",
+    "section": "Full output: linear mixed model",
+    "text": "Full output: linear mixed model\nfit_lmm &lt;- lmer(dors ~ sex + (1 | mother), data = lizard)\nsummary(fit_lmm)\n\n\n\n\n\n\n\n\n\n\nFixed effects\n\n\nTerm\nEstimate\nSE\ndf\nt\np-value\n\n\n\n\n(Intercept)\n35.49\n0.34\n48.5\n103.71\n&lt; 0.001\n\n\nsexFemale\n-0.83\n0.32\n85.4\n-2.57\n0.012\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nRandom effects\n\n\nGroup\nVariance\nStd. Dev.\n\n\n\n\nmother\n1.78\n1.33\n\n\nResidual\n2.25\n1.50\n\n\n\n\n\n\n\n\n102 observations, 29 mothers: R now knows the data are grouped.\n\nWhere to look: the variances are the numbers behind the ICC; row sexFemale is the difference between females and males."
+  },
+  {
+    "objectID": "index.html#how-alike-are-siblings",
+    "href": "index.html#how-alike-are-siblings",
+    "title": "Introduction to GLMM",
+    "section": "How alike are siblings?",
+    "text": "How alike are siblings?\n\nThe model splits the total variability into two parts:\n\\[\n\\underbrace{4.03}_{\\text{total}} = \\underbrace{1.78}_{\\sigma^2_{mother}} + \\underbrace{2.25}_{\\sigma^2}\n\\]\n\n\n\n\n\n\n\n\n\n\nIntraclass correlation (ICC): \\(\\rho = \\frac{\\sigma^2_{mother}}{\\sigma^2_{mother} + \\sigma^2} = 0.44\\)\nTwo lizards from the same mother are correlated with \\(\\rho \\approx\\) 0.44. The larger the ICC, the more it matters to account for the grouping."
+  },
+  {
+    "objectID": "index.html#what-if-y-is-not-continuous",
+    "href": "index.html#what-if-y-is-not-continuous",
+    "title": "Introduction to GLMM",
+    "section": "What if \\(y\\) is not continuous?",
+    "text": "What if \\(y\\) is not continuous?\n\nRemember \\(\\epsilon \\sim N(0, \\sigma^2)\\)? It breaks down for many outcomes in CBB research:\n\nBinary: chose the correct option, looked at the target (0/1)\nCounts: number of vocalisations, spikes, aggressive interactions\n\n\n\nExample (simulated): 30 individuals do a learning task, 10 trials per session over 8 sessions. Outcome: correct (1) or not (0).\nLike a GLM, we model the log-odds through a link function:\n\\[\n\\text{logit}(\\pi) = \\log\\frac{\\pi}{1 - \\pi}\n\\]"
+  },
+  {
+    "objectID": "index.html#the-generalized-linear-mixed-model-glmm",
+    "href": "index.html#the-generalized-linear-mixed-model-glmm",
+    "title": "Introduction to GLMM",
+    "section": "The generalized linear mixed model (GLMM)",
+    "text": "The generalized linear mixed model (GLMM)\n\n\\[\n\\text{correct}_{ij} \\sim \\text{Bernoulli}(\\pi_{ij}), \\qquad\n\\text{logit}(\\pi_{ij}) = \\beta_0 + b_i + \\beta_1 \\, \\text{session}_{ij}, \\qquad\nb_i \\sim N(0, \\sigma^2_b)\n\\]\n\nglmer(correct ~ session + (1 | id), family = binomial, data = learn)\n\n\n\\(\\hat\\beta_1 =\\) 0.50: for a typical individual, the odds of a correct answer are multiplied by 1.65 per session.\n\\(\\hat\\sigma_b =\\) 1.60: individuals differ a lot in their baseline performance.\nSame logic as before: the random effect \\(b_i\\) accounts for repeated trials from the same individual."
+  },
+  {
+    "objectID": "index.html#full-output-glmm",
+    "href": "index.html#full-output-glmm",
+    "title": "Introduction to GLMM",
+    "section": "Full output: GLMM",
+    "text": "Full output: GLMM\nfit_glmm &lt;- glmer(correct ~ session + (1 | id), family = binomial, data = learn)\nsummary(fit_glmm)\n\n\n\n\n\n\n\n\n\n\nFixed effects (log-odds scale)\n\n\nTerm\nEstimate\nSE\nz\np-value\nOdds ratio\n\n\n\n\n(Intercept)\n-2.21\n0.32\n-6.90\n&lt; 0.001\n0.11\n\n\nsession\n0.50\n0.03\n18.95\n&lt; 0.001\n1.65\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nRandom effects\n\n\nGroup\nVariance\nStd. Dev.\n\n\n\n\nid\n2.57\n1.60\n\n\n\n\n\n\n\n\n\nWhere to look:\n\nRow session: change in log-odds per session for a typical individual; the odds ratio is exp() of it\nStd. Dev. of id: how much individuals differ. There is no Residual row: for binary data, that variability comes from the Bernoulli distribution"
+  },
+  {
+    "objectID": "index.html#one-thing-to-remember",
+    "href": "index.html#one-thing-to-remember",
+    "title": "Introduction to GLMM",
+    "section": "One thing to remember",
+    "text": "One thing to remember\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nGrey: predicted curve for each individual.\nAverage curve ≠ curve of the average individual.\nIn a GLMM, the coefficients describe the typical individual, not the population average.\n\n\n\n\n\n\n\n\nIn a linear mixed model the two coincide. With a link function (logit, log), they do not."
+  },
+  {
+    "objectID": "index.html#before-you-fit-a-mixed-model-ask",
+    "href": "index.html#before-you-fit-a-mixed-model-ask",
+    "title": "Introduction to GLMM",
+    "section": "Before you fit a mixed model, ask…",
+    "text": "Before you fit a mixed model, ask…\n\n\nWhat are my units, and how are they grouped? (trials in individuals, individuals in groups, …)\nWhat type is my response? Continuous, binary, count: this chooses the family and link.\nIs my question about the typical individual or the population?\n\n\n\n\n\n\n\n\nNext session\n\n\nA hands-on session in R: fitting, reading and checking LMMs and GLMMs with lme4, ideally with your own data.\nLater on: random slopes and crossed random effects (e.g., participants and items)."
   },
   {
     "objectID": "index.html#section-1",
     "href": "index.html#section-1",
-    "title": "titulo",
+    "title": "Introduction to GLMM",
     "section": "",
-    "text": "Fin del módulo\n\n\n\n\n\n\n\nCréditos\n\n\nFoto portada por Pat Whelen en Unsplash\nFoto final por PARK HONG KYU en Unsplash"
+    "text": "Thank you!"
+  },
+  {
+    "objectID": "index.html#credits",
+    "href": "index.html#credits",
+    "title": "Introduction to GLMM",
+    "section": "Credits",
+    "text": "Credits\n\n\n\n\n\n\n\nData\n\n\n\nLizard dataset courtesy of Prof. Geert Verbeke (KU Leuven), available at gbiomed.kuleuven.be\nVerbeke, G. & Molenberghs, G. (2000). Linear Mixed Models for Longitudinal Data. Springer.\nMolenberghs, G. & Verbeke, G. (2005). Models for Discrete Longitudinal Data. Springer.\n\n\n\n\n\n\n\n\n\n\nImages\n\n\n\nCover photo by Pat Whelen in Unsplash\nEnding photo by PARK HONG KYU in Unsplash"
   }
 ]

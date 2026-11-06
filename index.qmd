@@ -1,6 +1,6 @@
 ---
 logo: images/icon1_nb.png
-lang: es
+lang: en
 filters:
   - timer
 format: 
@@ -21,18 +21,145 @@ format:
       - pointer
       
 callout-appearance: simple
+execute:
+  echo: false
+  warning: false
+  message: false
 ---
+
+```{r}
+#| label: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+library(lme4)
+library(lmerTest)
+library(gt)
+
+theme_set(theme_minimal(base_size = 18))
+sex_cols <- c(Male = "#0072B2", Female = "#D55E00")
+
+# number formatting helpers for inline results
+f  <- function(x, d = 2) formatC(unname(x), format = "f", digits = d)
+fp <- function(p) if (p < 0.001) "< 0.001" else paste("=", formatC(p, format = "f", digits = 3))
+
+# vectorised formatters and a common table style for the output slides
+fnum <- function(x, d = 2) ifelse(is.na(x), "", formatC(x, format = "f", digits = d))
+fpv  <- function(p) ifelse(is.na(p), "", ifelse(p < 0.001, "< 0.001", formatC(p, format = "f", digits = 3)))
+
+nice_table <- function(df, title = NULL, highlight = NULL) {
+  tab <- gt(df) |>
+    tab_options(table.font.size = px(22),
+                heading.title.font.size = px(24),
+                column_labels.font.weight = "bold",
+                table.width = pct(100))
+  if (!is.null(title)) tab <- tab_header(tab, title = title)
+  if (!is.null(highlight)) {
+    tab <- tab_style(tab, style = cell_fill(color = "#FFF3CD"),
+                     locations = cells_body(rows = highlight))
+  }
+  tab
+}
+
+# ---- Lizard data (Verbeke) ----
+raw   <- readLines("data/lizard.sas")
+start <- grep("^cards;", raw) + 1
+end   <- grep("^;", raw)[1] - 1
+lizard <- read.table(text = raw[start:end],
+                     col.names = c("moth", "sex", "dors"),
+                     na.strings = ".") |>
+  filter(!is.na(dors)) |>
+  mutate(sex    = factor(sex, levels = c(0, 1), labels = c("Male", "Female")),
+         mother = factor(moth)) |>
+  group_by(mother) |>
+  mutate(m_mean = mean(dors)) |>
+  ungroup() |>
+  mutate(mother_ord = reorder(mother, m_mean))
+
+mother_means <- distinct(lizard, mother_ord, m_mean)
+
+# t-test ignoring mothers
+tt <- t.test(dors ~ sex, data = lizard, var.equal = TRUE)
+diff_raw <- diff(tapply(lizard$dors, lizard$sex, mean))  # female - male
+
+# mother as fixed effect
+fit_fixed <- lm(dors ~ mother + sex, data = lizard)
+p_fixed   <- anova(fit_fixed)["sex", "Pr(>F)"]
+
+# linear mixed model
+fit_lmm <- lmer(dors ~ sex + (1 | mother), data = lizard)
+co  <- summary(fit_lmm)$coefficients
+vc  <- as.data.frame(VarCorr(fit_lmm))
+s2m <- vc$vcov[vc$grp == "mother"]
+s2e <- vc$vcov[vc$grp == "Residual"]
+icc <- s2m / (s2m + s2e)
+
+var_df <- data.frame(
+  part  = factor(c("Between mothers", "Within mothers"),
+                 levels = c("Within mothers", "Between mothers")),
+  share = c(s2m, s2e) / (s2m + s2e)
+)
+var_df$lab <- paste0(var_df$part, ": ", round(100 * var_df$share), "%")
+
+# predictions per mother and for the average mother
+pred_grid <- expand.grid(mother = levels(lizard$mother),
+                         sex    = levels(lizard$sex),
+                         stringsAsFactors = FALSE) |>
+  mutate(mother = factor(mother, levels = levels(lizard$mother)),
+         sex    = factor(sex, levels = levels(lizard$sex)))
+pred_grid$fit <- predict(fit_lmm, newdata = pred_grid)
+
+pop_pred <- data.frame(sex = factor(levels(lizard$sex), levels = levels(lizard$sex)))
+pop_pred$fit <- predict(fit_lmm, newdata = pop_pred, re.form = NA)
+
+# ---- Simulated learning task (binary outcome) ----
+set.seed(2026)
+n_id     <- 30
+sessions <- 1:8
+n_trials <- 10
+b_true   <- rnorm(n_id, mean = 0, sd = 1.5)
+
+learn <- expand.grid(id = 1:n_id, session = sessions, trial = 1:n_trials)
+learn$correct <- rbinom(nrow(learn), size = 1,
+                        prob = plogis(-1.5 + 0.5 * (learn$session - 1) + b_true[learn$id]))
+learn$id <- factor(learn$id)
+
+learn_sum <- learn |>
+  group_by(id, session) |>
+  summarise(p = mean(correct), .groups = "drop")
+
+fit_glmm  <- glmer(correct ~ session + (1 | id), family = binomial, data = learn)
+beta_glmm <- fixef(fit_glmm)
+sd_b      <- as.data.frame(VarCorr(fit_glmm))$sdcor[1]
+
+# individual, typical and population-average curves
+s_grid <- seq(min(sessions), max(sessions), length.out = 100)
+b_hat  <- ranef(fit_glmm)$id[[1]]
+ind_curves <- expand.grid(session = s_grid, id = seq_along(b_hat))
+ind_curves$p <- plogis(beta_glmm[1] + beta_glmm[2] * ind_curves$session + b_hat[ind_curves$id])
+
+b_draw <- rnorm(5000, mean = 0, sd = sd_b)
+curves <- rbind(
+  data.frame(session = s_grid,
+             p = plogis(beta_glmm[1] + beta_glmm[2] * s_grid),
+             type = "Typical individual (b = 0)"),
+  data.frame(session = s_grid,
+             p = sapply(s_grid, function(s) mean(plogis(beta_glmm[1] + beta_glmm[2] * s + b_draw))),
+             type = "Population average")
+)
+```
+
 
 ## 
 
 ::: columns
 ::: {.column width="37.5%"}
-![](images/icon1_nb.png){style="margin-left:-40px"}
+
 :::
 
 ::: {.column width="60%"}
 ::: {.title data-id="title"}
-Lighting Introduction to Generalized Linear Mixed Models
+Lightning Introduction to Generalized Linear Mixed Models
 :::
 
 Mauricio Moreno, PhD
@@ -42,34 +169,634 @@ Mauricio Moreno, PhD
 ![](images/sample_back.jpg){.image-left}
 
 
-<!-- ultima slide -->
+## Today's goals {.smaller}
+
+:::: v-stack
+
+By the end of this session, you will be able to:
+
+::: {.incremental}
+1. **Recognise** when your data are grouped (repeated trials, siblings, individuals in social groups) and why that breaks the independence assumption.
+2. **Explain** what a random intercept is and what the intraclass correlation tells you.
+3. **Choose** between a linear mixed model and a GLMM based on the type of your response.
+4. **Interpret** the coefficients of a GLMM as effects for the *typical individual*.
+:::
+
+::: {.callout-note .fragment}
+At the end, we turn these goals into three questions to ask about **your own data**.
+:::
+
+::::
+
+## What is a linear model? {.smaller}
+
+::: v-stack
+
+Simply put, a linear model is a mathematical equation that predicts a continuous dependent variable ($y$) as a linear combination of one or more predictors ($x$):
+
+
+$$
+y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n + \epsilon
+$$
+
+:::: {.columns .v-center .fragment}
+
+::: {.column width="40%"}
+Where:
+
+- $\beta_0$: intercept
+- $\beta_1, \dots, \beta_n$: effects of the predictors
+- $\epsilon$: residual error, assumed $\epsilon \sim N(0, \sigma^2)$
+:::
+
+::: {.column width="60%" .fragment}
+::: {.callout-tip}
+## What does "linear" mean?
+
+- Linear does **not** mean the relationship between $x$ and $y$ has to be a straight line. It means the model is **linear in the parameters** ($\beta$).
+- Predictors can be transformed (e.g., $X^2$, $\log X$) and it is still a linear model, as long as each $\beta$ only multiplies a term and is added up:
+  - $y = \beta_0 + \beta_1 X + \beta_2 X^2 + \epsilon$ ✅ linear (a curve!)
+  - $y = \beta_0 \, e^{\beta_1 X} + \epsilon$ ❌ not linear, because $\beta_1$ sits inside the exponential
+:::
+:::
+
+::::
+
+:::
+
+## One model, many names {.smaller}
+
+:::: v-stack
+
+Many methods you already know are special cases of the linear model:
+
+::: {.incremental}
+- **Simple and multiple linear regression:** predicts a continuous $y$ from one or more predictors.
+- **t-test:** compares two group means (one binary predictor).
+- **ANOVA:** compares two or more group means using categorical predictors.
+- **ANCOVA:** combines categorical and continuous predictors to compare group means, adjusting for a covariate.
+- **Generalized linear models (GLM):** extend the idea to other types of responses, such as binary (logistic regression) or counts (Poisson regression), by linking the mean of $y$ to the predictors through a **link function**.
+:::
+
+::: {.callout-important .fragment}
+All of them assume that **observations are independent**. What happens when they are not?
+:::
+
+::::
+
+
+
+## A simple question {.smaller}
+
+:::: v-stack
+
+::::: {.columns .v-center}
+
+::: {.column width="45%"}
+**102 lizards.** Do males and females differ in the number of **dorsal scales**?
+
+::: {.fragment}
+A two-sample t-test (or `lm(dors ~ sex)`):
+
+- Females minus males: `r f(diff_raw)` scales
+- $p$ `r fp(tt$p.value)`
+:::
+
+::: {.fragment}
+::: {.callout-note}
+Conclusion: **no evidence** of a sex difference... right?
+:::
+:::
+:::
+
+::: {.column width="55%"}
+```{r}
+#| label: plot-sex
+#| fig-width: 6
+#| fig-height: 5
+ggplot(lizard, aes(sex, dors, fill = sex)) +
+  geom_boxplot(alpha = 0.3, outlier.shape = NA, width = 0.5) +
+  geom_jitter(aes(colour = sex), width = 0.12, height = 0.15,
+              size = 2.5, alpha = 0.8) +
+  scale_fill_manual(values = sex_cols) +
+  scale_colour_manual(values = sex_cols) +
+  labs(x = NULL, y = "Dorsal scales") +
+  theme(legend.position = "none")
+```
+:::
+
+:::::
+
+::::
+
+## Full output: t-test {.smaller}
+
+```r
+t.test(dors ~ sex, data = lizard, var.equal = TRUE)
+```
+
+::::: {.columns .v-center}
+
+::: {.column width="55%"}
+```{r}
+data.frame(
+  Statistic = c("Mean (males)", "Mean (females)", "Difference (males - females)",
+                "95% CI of the difference", "t", "df", "p-value"),
+  Value = c(fnum(tt$estimate[1]), fnum(tt$estimate[2]),
+            fnum(tt$estimate[1] - tt$estimate[2]),
+            paste0("[", fnum(tt$conf.int[1]), ", ", fnum(tt$conf.int[2]), "]"),
+            fnum(tt$statistic), fnum(tt$parameter, 0), fpv(tt$p.value))
+) |>
+  nice_table(title = "Two-sample t-test", highlight = c(6, 7))
+```
+:::
+
+::: {.column width="45%" .fragment}
+**Where to look:**
+
+- **p-value**: the one on the previous slide
+- **df = `r fnum(tt$parameter, 0)`**: R treats all 102 lizards as **independent** observations
+:::
+
+:::::
+
+## But wait... who are their mothers? {.smaller}
+
+:::: v-stack
+
+The 102 lizards come from **`r nlevels(lizard$mother)` mothers**.
+
+```{r}
+#| label: plot-mothers
+#| fig-width: 13
+#| fig-height: 3.6
+ggplot(lizard, aes(mother_ord, dors, colour = sex)) +
+  geom_errorbar(data = mother_means,
+                aes(x = mother_ord, ymin = m_mean, ymax = m_mean),
+                inherit.aes = FALSE, width = 0.7,
+                colour = "grey55", linewidth = 1) +
+  geom_point(position = position_jitter(width = 0.15, height = 0.1, seed = 1),
+             size = 2.8, alpha = 0.85) +
+  scale_colour_manual(values = sex_cols, name = NULL) +
+  labs(x = "Mother (ordered by average number of scales)",
+       y = "Dorsal scales") +
+  theme(axis.text.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        legend.position = "top")
+```
+
+::: {.incremental}
+- Lots of variability **between** mothers (grey bars = mother averages).
+- **Within** a mother, males tend to have more scales.
+- Siblings are more alike than unrelated lizards: observations are **not independent**.
+:::
+
+::::
+
+## Hierarchical data {.smaller}
+
+:::: v-stack
+
+::::: {.callout-fit}
+::: {.callout-tip}
+*"Hierarchical data are obtained when the sample is taken at multiple, hierarchically ordered, levels."*^[Verbeke, G. (2013). *Concepts of multilevel, longitudinal, and mixed models*. Lecture notes, KU Leuven.]
+:::
+:::::
+
+::::: {.columns .v-center}
+
+::: {.column width="55%" .fragment}
+**Our lizards:**
+
+- Level 2: `r nlevels(lizard$mother)` **mothers**
+  - Level 1: 102 **lizards** (sex measured on each lizard)
+
+**In CBB research, for example:**
+
+- Social groups → individuals → trials
+:::
+
+::: {.column width="45%" .fragment}
+Also known as:
+
+- Repeated measures
+- Longitudinal data
+- Multilevel data
+- **[Clustered or correlated data]{.danger}**
+:::
+
+:::::
+
+::::: {.callout-fit .fragment}
+::: {.callout-important}
+Hierarchical data are usually **not independent**. The key question is: how do we **account for the association** between observations from the same cluster?
+:::
+:::::
+
+::::
+
+## Option 1: mother as a fixed effect? {.smaller}
+
+:::: v-stack
+
+```r
+lm(dors ~ mother + sex, data = lizard)
+```
+
+::: {.incremental}
+- It works: the sex effect is now significant ($p$ `r fp(p_fixed)`).
+- But it spends **`r nlevels(lizard$mother) - 1` parameters** just on the mothers.
+- And we are not interested in *these* `r nlevels(lizard$mother)` mothers, but in lizard mothers **in general**.
+:::
+
+::: {.callout-tip .fragment}
+## Idea
+Treat the mothers as a **random sample** from a population of mothers, and estimate how much they **vary**.
+:::
+
+::::
+
+## Full output: mother as a fixed effect {.smaller}
+
+```r
+fit_fixed <- lm(dors ~ mother + sex, data = lizard)
+anova(fit_fixed)
+```
+
+::::: {.columns .v-center}
+
+::: {.column width="62%"}
+```{r}
+a_tab <- anova(fit_fixed)
+data.frame(
+  Term      = rownames(a_tab),
+  Df        = fnum(a_tab$Df, 0),
+  `Sum Sq`  = fnum(a_tab$`Sum Sq`),
+  `Mean Sq` = fnum(a_tab$`Mean Sq`),
+  F         = fnum(a_tab$`F value`),
+  `p-value` = fpv(a_tab$`Pr(>F)`),
+  check.names = FALSE
+) |>
+  nice_table(title = "ANOVA table", highlight = c(1, 2))
+```
+:::
+
+::: {.column width="38%" .fragment}
+**Where to look:**
+
+- Row **sex**: the sex effect, tested **after** adjusting for mother
+- Row **mother**: **Df = `r fnum(a_tab$Df[1], 0)`**, the parameters spent on the mothers
+:::
+
+:::::
+
+## The linear mixed model {.smaller}
+
+:::: v-stack
+
+::::: {.columns .v-center}
+
+::: {.column width="50%"}
+$$
+y_{ij} = \beta_0 + \alpha_i + \beta_1 \, \text{sex}_{ij} + \epsilon_{ij}
+$$
+
+$$
+\alpha_i \sim N(0, \sigma^2_{mother}), \qquad \epsilon_{ij} \sim N(0, \sigma^2)
+$$
+
+- $i$: mother, $j$: lizard within mother
+- $\alpha_i$: **random intercept**, each mother has her own baseline
+
+::: {.fragment}
+```r
+library(lmerTest)
+lmer(dors ~ sex + (1 | mother), data = lizard)
+```
+
+Sex effect: `r f(co["sexFemale", "Estimate"])` scales (SE `r f(co["sexFemale", "Std. Error"])`), $p$ `r fp(co["sexFemale", "Pr(>|t|)"])`
+:::
+:::
+
+::: {.column width="50%" .fragment}
+```{r}
+#| label: plot-ranint
+#| fig-width: 6
+#| fig-height: 5
+ggplot(pred_grid, aes(sex, fit, group = mother)) +
+  geom_line(colour = "grey70", alpha = 0.8) +
+  geom_line(data = pop_pred, aes(group = 1), colour = "black", linewidth = 2) +
+  geom_point(data = pop_pred, aes(group = 1, colour = sex), size = 5) +
+  scale_colour_manual(values = sex_cols) +
+  labs(x = NULL, y = "Predicted dorsal scales",
+       subtitle = "Grey: each mother   Black: average mother") +
+  theme(legend.position = "none")
+```
+:::
+
+:::::
+
+::::
+
+## Full output: linear mixed model {.smaller}
+
+```r
+fit_lmm <- lmer(dors ~ sex + (1 | mother), data = lizard)
+summary(fit_lmm)
+```
+
+::::: {.columns}
+
+::: {.column width="58%"}
+```{r}
+data.frame(
+  Term      = rownames(co),
+  Estimate  = fnum(co[, "Estimate"]),
+  SE        = fnum(co[, "Std. Error"]),
+  df        = fnum(co[, "df"], 1),
+  t         = fnum(co[, "t value"]),
+  `p-value` = fpv(co[, "Pr(>|t|)"]),
+  check.names = FALSE
+) |>
+  nice_table(title = "Fixed effects", highlight = 2)
+```
+:::
+
+::: {.column width="42%"}
+```{r}
+data.frame(
+  Group      = vc$grp,
+  Variance   = fnum(vc$vcov),
+  `Std. Dev.` = fnum(vc$sdcor),
+  check.names = FALSE
+) |>
+  nice_table(title = "Random effects", highlight = c(1, 2))
+```
+:::
+
+:::::
+
+`r nobs(fit_lmm)` observations, `r ngrps(fit_lmm)` mothers: R now knows the data are **grouped**.
+
+::: {.fragment}
+**Where to look:** the **variances** are the numbers behind the ICC; row **sexFemale** is the difference between females and males.
+:::
+
+## How alike are siblings? {.smaller}
+
+:::: v-stack
+
+The model splits the total variability into two parts:
+
+$$
+\underbrace{`r f(s2m + s2e)`}_{\text{total}} = \underbrace{`r f(s2m)`}_{\sigma^2_{mother}} + \underbrace{`r f(s2e)`}_{\sigma^2}
+$$
+
+```{r}
+#| label: plot-icc
+#| fig-width: 12
+#| fig-height: 1.6
+#| fig-align: "center"
+ggplot(var_df, aes(x = 1, y = share, fill = part)) +
+  geom_col(width = 0.6) +
+  geom_text(aes(label = lab), position = position_stack(vjust = 0.5),
+            colour = "white", size = 6, fontface = "bold") +
+  scale_fill_manual(values = c("Between mothers" = "#0072B2",
+                               "Within mothers" = "#999999")) +
+  coord_flip() +
+  theme_void() +
+  theme(legend.position = "none")
+```
+
+::: {.fragment}
+**Intraclass correlation (ICC):** $\rho = \frac{\sigma^2_{mother}}{\sigma^2_{mother} + \sigma^2} = `r f(icc)`$
+
+Two lizards from the same mother are correlated with $\rho \approx$ `r f(icc)`. The larger the ICC, the more it matters to account for the grouping.
+:::
+
+::::
+
+## What if $y$ is not continuous? {.smaller}
+
+:::: v-stack
+
+Remember $\epsilon \sim N(0, \sigma^2)$? It breaks down for many outcomes in CBB research:
+
+::: {.incremental}
+- **Binary:** chose the correct option, looked at the target (0/1)
+- **Counts:** number of vocalisations, spikes, aggressive interactions
+:::
+
+::::: {.columns .v-center .fragment}
+
+::: {.column width="45%"}
+**Example (simulated):** `r n_id` individuals do a learning task, `r n_trials` trials per session over `r length(sessions)` sessions. Outcome: correct (1) or not (0).
+
+Like a GLM, we model the **log-odds** through a **link function**:
+
+$$
+\text{logit}(\pi) = \log\frac{\pi}{1 - \pi}
+$$
+:::
+
+::: {.column width="55%"}
+```{r}
+#| label: plot-learn
+#| fig-width: 6
+#| fig-height: 3.8
+ggplot(learn_sum, aes(session, p)) +
+  geom_line(aes(group = id), colour = "grey70", alpha = 0.8) +
+  stat_summary(fun = mean, geom = "line", linewidth = 2, colour = "#D55E00") +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1)) +
+  scale_x_continuous(breaks = sessions) +
+  labs(x = "Session", y = "Proportion correct",
+       subtitle = "Grey: each individual   Orange: average")
+```
+:::
+
+:::::
+
+::::
+
+## The generalized linear mixed model (GLMM) {.smaller}
+
+:::: v-stack
+
+$$
+\text{correct}_{ij} \sim \text{Bernoulli}(\pi_{ij}), \qquad
+\text{logit}(\pi_{ij}) = \beta_0 + b_i + \beta_1 \, \text{session}_{ij}, \qquad
+b_i \sim N(0, \sigma^2_b)
+$$
+
+::: {.fragment}
+```r
+glmer(correct ~ session + (1 | id), family = binomial, data = learn)
+```
+:::
+
+::: {.incremental}
+- $\hat\beta_1 =$ `r f(beta_glmm["session"])`: for a **typical individual**, the odds of a correct answer are multiplied by **`r f(exp(beta_glmm["session"]))`** per session.
+- $\hat\sigma_b =$ `r f(sd_b)`: individuals differ a lot in their baseline performance.
+- Same logic as before: the random effect $b_i$ accounts for repeated trials from the same individual.
+:::
+
+::::
+
+## Full output: GLMM {.smaller}
+
+```r
+fit_glmm <- glmer(correct ~ session + (1 | id), family = binomial, data = learn)
+summary(fit_glmm)
+```
+
+::::: {.columns}
+
+::: {.column width="62%"}
+```{r}
+cg <- summary(fit_glmm)$coefficients
+data.frame(
+  Term         = rownames(cg),
+  Estimate     = fnum(cg[, "Estimate"]),
+  SE           = fnum(cg[, "Std. Error"]),
+  z            = fnum(cg[, "z value"]),
+  `p-value`    = fpv(cg[, "Pr(>|z|)"]),
+  `Odds ratio` = fnum(exp(cg[, "Estimate"])),
+  check.names = FALSE
+) |>
+  nice_table(title = "Fixed effects (log-odds scale)", highlight = 2)
+```
+:::
+
+::: {.column width="38%"}
+```{r}
+vcg <- as.data.frame(VarCorr(fit_glmm))
+data.frame(
+  Group       = vcg$grp,
+  Variance    = fnum(vcg$vcov),
+  `Std. Dev.` = fnum(vcg$sdcor),
+  check.names = FALSE
+) |>
+  nice_table(title = "Random effects", highlight = 1)
+```
+:::
+
+:::::
+
+::: {.fragment}
+**Where to look:**
+
+- Row **session**: change in **log-odds** per session for a typical individual; the **odds ratio** is `exp()` of it
+- **Std. Dev.** of `id`: how much individuals differ. There is no Residual row: for binary data, that variability comes from the Bernoulli distribution
+:::
+
+## One thing to remember {.smaller}
+
+:::: v-stack
+
+::::: {.columns .v-center}
+
+::: {.column width="55%"}
+```{r}
+#| label: plot-marginal
+#| fig-width: 6.5
+#| fig-height: 4.8
+ggplot() +
+  geom_line(data = ind_curves, aes(session, p, group = id),
+            colour = "grey80") +
+  geom_line(data = curves, aes(session, p, colour = type, linetype = type),
+            linewidth = 1.8) +
+  scale_colour_manual(values = c("Typical individual (b = 0)" = "#0072B2",
+                                 "Population average" = "#D55E00"),
+                      name = NULL) +
+  scale_linetype_manual(values = c("Typical individual (b = 0)" = "solid",
+                                   "Population average" = "dashed"),
+                        name = NULL) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1)) +
+  labs(x = "Session", y = "P(correct)") +
+  theme(legend.position = "top", legend.direction = "vertical")
+```
+:::
+
+::: {.column width="45%"}
+::: {.incremental}
+- Grey: predicted curve for each individual.
+- **Average curve ≠ curve of the average individual.**
+- In a GLMM, the coefficients describe the **typical individual**, not the population average.
+:::
+
+::: {.callout-important .fragment}
+In a linear mixed model the two coincide. With a link function (logit, log), they do not.
+:::
+:::
+
+:::::
+
+::::
+
+## Before you fit a mixed model, ask... {.smaller}
+
+:::: v-stack
+
+::: {.incremental}
+1. **What are my units, and how are they grouped?** (trials in individuals, individuals in groups, ...)
+2. **What type is my response?** Continuous, binary, count: this chooses the family and link.
+3. **Is my question about the typical individual or the population?**
+:::
+
+::::: {.callout-fit .fragment}
+::: {.callout-tip}
+## Next session
+A **hands-on session in R**: fitting, reading and checking LMMs and GLMMs with `lme4`, ideally with **your own data**.
+
+Later on: **random slopes** and **crossed random effects** (e.g., participants and items).
+:::
+:::::
+
+::::
+
+<!-- thank you slide -->
 ## {}
 
-::: columns
+:::: columns
+
 ::: {.column width="60%"}
 
 ::: {.title data-id="title"}
-Fin del módulo
-:::
-
-::: {.callout-tip}
-## Créditos
-
-Foto portada por <a href="https://unsplash.com/@patwhelen?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Pat Whelen</a> en <a href="https://unsplash.com/photos/train-rail-near-brown-building-during-daytime-yRvYmE7WVec?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a>
-  
-
-Foto final por <a href="https://unsplash.com/@hongkyu?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">PARK HONG KYU</a> en <a href="https://unsplash.com/photos/white-and-black-boat-on-sea-during-sunset-f7efwMH5esE?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a>
-
+Thank you!
 :::
 
 :::
 
 ::: {.column width="37.5%"}
 
-![](images/icon1_nb.png){style="margin-left:125px"}
-
 
 :::
-:::
+
+::::
 
 ![](images/chau_mijes.jpg){.image-right}
+
+
+<!-- credits slide -->
+## Credits {.smaller}
+
+:::: v-stack
+
+::: {.callout-tip}
+## Data
+
+- Lizard dataset courtesy of Prof. Geert Verbeke (KU Leuven), available at <a href="https://gbiomed.kuleuven.be/english/research/50000687/50000696/geertverbeke/datasets">gbiomed.kuleuven.be</a>
+- Verbeke, G. & Molenberghs, G. (2000). *Linear Mixed Models for Longitudinal Data*. Springer.
+- Molenberghs, G. & Verbeke, G. (2005). *Models for Discrete Longitudinal Data*. Springer.
+:::
+
+::: {.callout-note}
+## Images
+
+- Cover photo by <a href="https://unsplash.com/@patwhelen?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Pat Whelen</a> in <a href="https://unsplash.com/photos/train-rail-near-brown-building-during-daytime-yRvYmE7WVec?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a>
+  
+- Ending photo by <a href="https://unsplash.com/@hongkyu?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">PARK HONG KYU</a> in <a href="https://unsplash.com/photos/white-and-black-boat-on-sea-during-sunset-f7efwMH5esE?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a>
+
+:::
+
+::::

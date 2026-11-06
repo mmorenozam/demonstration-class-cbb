@@ -6,12 +6,6 @@
   align-items: self-end;
 }
 
-.v-center {
-  display: flex;
-  justify-content: center;
-  align-items: self-end;
-}
-
 .v-right {
   display: flex;
   justify-content: right;
@@ -172,4 +166,28 @@ span.term {
 
 .reveal code {
   white-space: pre;
+}
+
+.reveal .columns.v-center {
+  display: flex;
+  align-items: center;
+}
+
+.v-stack {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;   /* vertical centering of the whole block */
+  min-height: 560px;         /* 720px slide minus title area */
+}
+
+/* callouts shrunk to their text and centred (wrap the callout in ::: {.callout-fit}) */
+.reveal .callout-fit {
+  display: flex;
+  justify-content: center;
+}
+
+.reveal .slides section .callout-fit > div.callout {
+  width: fit-content;
+  max-width: 85%;
+  font-size: 1em;   /* Quarto shrinks callouts to 0.7em; keep slide font size */
 }

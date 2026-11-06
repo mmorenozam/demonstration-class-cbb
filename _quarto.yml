@@ -3,7 +3,7 @@ project:
   output-dir: docs
 
 website:
-  title: "titulo"
+  title: "Introduction to GLMM"
   image: images/icon1.png
   favicon: images/icon1.png
 
