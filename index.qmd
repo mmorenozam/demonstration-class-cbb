@@ -47,10 +47,10 @@ fp <- function(p) if (p < 0.001) "< 0.001" else paste("=", formatC(p, format = "
 fnum <- function(x, d = 2) ifelse(is.na(x), "", formatC(x, format = "f", digits = d))
 fpv  <- function(p) ifelse(is.na(p), "", ifelse(p < 0.001, "< 0.001", formatC(p, format = "f", digits = 3)))
 
-nice_table <- function(df, title = NULL, highlight = NULL) {
+nice_table <- function(df, title = NULL, highlight = NULL, font = 22) {
   tab <- gt(df) |>
-    tab_options(table.font.size = px(22),
-                heading.title.font.size = px(24),
+    tab_options(table.font.size = px(font),
+                heading.title.font.size = px(font + 2),
                 column_labels.font.weight = "bold",
                 table.width = pct(100))
   if (!is.null(title)) tab <- tab_header(tab, title = title)
@@ -168,6 +168,14 @@ Mauricio Moreno, PhD
 
 ![](images/sample_back.jpg){.image-left}
 
+::: {.notes}
+⏱ Target: 0:20 (finish by 0:20)
+
+Hello everyone, and thank you for having me. Today I would like to give you a lightning introduction to generalized linear mixed models: what they are, why we need them, and how to read them.
+
+Imagine you are early-career PhD researchers who have used linear models before, but have never met a mixed model. That is who this session is for.
+:::
+
 
 ## Today's goals {.smaller}
 
@@ -187,6 +195,25 @@ At the end, we turn these goals into three questions to ask about **your own dat
 :::
 
 ::::
+
+::: {.notes}
+⏱ Target: 0:40 (finish by 1:00)
+
+Let me start with what you will take home.
+
+[click] First, you should be able to recognise when your data are grouped, and why that is a problem for standard methods.
+
+[click] Second, explain what a random intercept is, and what the intraclass correlation tells you.
+
+[click] Third, choose between a linear mixed model and a GLMM, depending on your response.
+
+[click] And fourth, interpret the coefficients of a GLMM correctly, as effects for the typical individual.
+
+[click] At the end, we will turn these goals into three questions you can ask about your own data.
+
+Slow down here. Read each goal, do not rush.
+:::
+
 
 ## What is a linear model? {.smaller}
 
@@ -224,6 +251,17 @@ Where:
 
 :::
 
+::: {.notes}
+⏱ Target: 1:15 (finish by 2:15)
+
+Everything today builds on the linear model, so a quick reminder. We predict a continuous response y as a weighted sum of predictors, plus an error term.
+
+[click] Beta zero is the intercept, the other betas are the effects of the predictors, and epsilon is the residual error. Notice this assumption: the errors are normally distributed, with constant variance. Keep it in mind, we will come back to it.
+
+[click] One common misunderstanding: linear does not mean a straight line. It means linear in the parameters. A quadratic term still gives a linear model, even though the fitted line is curved. An exponential model, where beta sits inside the exponent, is not linear any more.
+:::
+
+
 ## One model, many names {.smaller}
 
 :::: v-stack
@@ -244,6 +282,23 @@ All of them assume that **observations are independent**. What happens when they
 
 ::::
 
+::: {.notes}
+⏱ Target: 1:00 (finish by 3:15)
+
+Many methods you already know are special cases of this one model.
+
+[click] Simple and multiple regression, of course.
+
+[click] A t-test is a linear model with one binary predictor.
+
+[click] ANOVA compares group means with categorical predictors.
+
+[click] ANCOVA adds a continuous covariate.
+
+[click] And generalized linear models extend the idea to other kinds of responses, like binary data or counts, through a link function. We will need that later.
+
+[click] But all of them share one assumption: the observations are independent. [pause] So what happens when they are not? Let me show you with real data.
+:::
 
 
 ## A simple question {.smaller}
@@ -256,15 +311,26 @@ All of them assume that **observations are independent**. What happens when they
 **102 lizards.** Do males and females differ in the number of **dorsal scales**?
 
 ::: {.fragment}
-A two-sample t-test (or `lm(dors ~ sex)`):
+`t.test(dors ~ sex, data = lizard, var.equal = TRUE)`
 
-- Females minus males: `r f(diff_raw)` scales
-- $p$ `r fp(tt$p.value)`
+```{r}
+#| label: tab-ttest
+data.frame(
+  Statistic = c("Mean (males)", "Mean (females)",
+                "Difference (males - females) [95% CI]", "t (df)", "p-value"),
+  Value = c(fnum(tt$estimate[1]), fnum(tt$estimate[2]),
+            paste0(fnum(tt$estimate[1] - tt$estimate[2]),
+                   " [", fnum(tt$conf.int[1]), ", ", fnum(tt$conf.int[2]), "]"),
+            paste0(fnum(tt$statistic), " (", fnum(tt$parameter, 0), ")"),
+            fpv(tt$p.value))
+) |>
+  nice_table(highlight = c(4, 5), font = 18)
+```
 :::
 
 ::: {.fragment}
 ::: {.callout-note}
-Conclusion: **no evidence** of a sex difference... right?
+Conclusion: **no evidence** of a sex difference... right? Note the **df = `r fnum(tt$parameter, 0)`**: R treats all 102 lizards as independent.
 :::
 :::
 :::
@@ -289,36 +355,16 @@ ggplot(lizard, aes(sex, dors, fill = sex)) +
 
 ::::
 
-## Full output: t-test {.smaller}
+::: {.notes}
+⏱ Target: 1:00 (finish by 4:15)
 
-```r
-t.test(dors ~ sex, data = lizard, var.equal = TRUE)
-```
+Here are 102 lizards. The question is simple: do males and females differ in the number of dorsal scales? On the plot, males seem to have slightly more, but there is a lot of overlap.
 
-::::: {.columns .v-center}
+[click] The classic answer is a two-sample t-test. The difference is small, and the p-value is about 0.10.
 
-::: {.column width="55%"}
-```{r}
-data.frame(
-  Statistic = c("Mean (males)", "Mean (females)", "Difference (males - females)",
-                "95% CI of the difference", "t", "df", "p-value"),
-  Value = c(fnum(tt$estimate[1]), fnum(tt$estimate[2]),
-            fnum(tt$estimate[1] - tt$estimate[2]),
-            paste0("[", fnum(tt$conf.int[1]), ", ", fnum(tt$conf.int[2]), "]"),
-            fnum(tt$statistic), fnum(tt$parameter, 0), fpv(tt$p.value))
-) |>
-  nice_table(title = "Two-sample t-test", highlight = c(6, 7))
-```
+[click] So the conclusion would be: no evidence of a sex difference. But look at the degrees of freedom: 100. The t-test treats all 102 lizards as independent pieces of information. [pause] Is that true?
 :::
 
-::: {.column width="45%" .fragment}
-**Where to look:**
-
-- **p-value**: the one on the previous slide
-- **df = `r fnum(tt$parameter, 0)`**: R treats all 102 lizards as **independent** observations
-:::
-
-:::::
 
 ## But wait... who are their mothers? {.smaller}
 
@@ -353,6 +399,21 @@ ggplot(lizard, aes(mother_ord, dors, colour = sex)) +
 
 ::::
 
+::: {.notes}
+⏱ Target: 1:30 (finish by 5:45)
+
+These 102 lizards come from 29 mothers. Here is the same data, now grouped by mother.
+
+THINK-PAIR-SHARE: ask the audience "What do you notice?" Wait at least 10 seconds in silence. Let them answer before clicking.
+
+[click] First: there is a lot of variability between mothers. Some mothers have offspring with many scales, others with few.
+
+[click] Second: within a mother, males tend to have more scales than their sisters.
+
+[click] And third: siblings are more alike than unrelated lizards. So our observations are not independent. The t-test ignored this structure.
+:::
+
+
 ## Hierarchical data {.smaller}
 
 :::: v-stack
@@ -371,9 +432,6 @@ ggplot(lizard, aes(mother_ord, dors, colour = sex)) +
 - Level 2: `r nlevels(lizard$mother)` **mothers**
   - Level 1: 102 **lizards** (sex measured on each lizard)
 
-**In CBB research, for example:**
-
-- Social groups → individuals → trials
 :::
 
 ::: {.column width="45%" .fragment}
@@ -395,38 +453,32 @@ Hierarchical data are usually **not independent**. The key question is: how do w
 
 ::::
 
+::: {.notes}
+⏱ Target: 0:45 (finish by 6:30)
+
+This kind of structure has a name. Hierarchical data arise when we sample at several, nested levels.
+
+[click] In our case, mothers are level 2, and lizards are level 1. Sex is measured on each lizard.
+
+[click] You may also know this as repeated measures, longitudinal data, multilevel data, or, the term I want you to remember, clustered or correlated data.
+
+[click] And this is the key question of the whole session: how do we account for the association between observations from the same cluster?
+:::
+
+
 ## Option 1: mother as a fixed effect? {.smaller}
 
 :::: v-stack
 
 ```r
-lm(dors ~ mother + sex, data = lizard)
-```
-
-::: {.incremental}
-- It works: the sex effect is now significant ($p$ `r fp(p_fixed)`).
-- But it spends **`r nlevels(lizard$mother) - 1` parameters** just on the mothers.
-- And we are not interested in *these* `r nlevels(lizard$mother)` mothers, but in lizard mothers **in general**.
-:::
-
-::: {.callout-tip .fragment}
-## Idea
-Treat the mothers as a **random sample** from a population of mothers, and estimate how much they **vary**.
-:::
-
-::::
-
-## Full output: mother as a fixed effect {.smaller}
-
-```r
-fit_fixed <- lm(dors ~ mother + sex, data = lizard)
-anova(fit_fixed)
+anova(lm(dors ~ mother + sex, data = lizard))
 ```
 
 ::::: {.columns .v-center}
 
-::: {.column width="62%"}
+::: {.column width="55%"}
 ```{r}
+#| label: tab-anova
 a_tab <- anova(fit_fixed)
 data.frame(
   Term      = rownames(a_tab),
@@ -437,18 +489,41 @@ data.frame(
   `p-value` = fpv(a_tab$`Pr(>F)`),
   check.names = FALSE
 ) |>
-  nice_table(title = "ANOVA table", highlight = c(1, 2))
+  nice_table(highlight = c(1, 2), font = 18)
 ```
 :::
 
-::: {.column width="38%" .fragment}
-**Where to look:**
-
-- Row **sex**: the sex effect, tested **after** adjusting for mother
-- Row **mother**: **Df = `r fnum(a_tab$Df[1], 0)`**, the parameters spent on the mothers
+::: {.column width="45%"}
+::: {.incremental}
+- It works: the sex effect, tested **after** adjusting for mother, is now significant ($p$ `r fp(p_fixed)`).
+- But it spends **`r nlevels(lizard$mother) - 1` parameters** (row mother, `Df`) just on the mothers.
+- And we are not interested in *these* `r nlevels(lizard$mother)` mothers, but in lizard mothers **in general**.
+:::
 :::
 
 :::::
+
+::: {.callout-tip .fragment}
+## Idea
+Treat the mothers as a **random sample** from a population of mothers, and estimate how much they **vary**.
+:::
+
+::::
+
+::: {.notes}
+⏱ Target: 0:50 (finish by 7:20)
+
+The first idea most people have is to add mother as a fixed effect, as in a two-way ANOVA.
+
+[click] And it works: once we adjust for mother, the sex effect becomes significant.
+
+[click] But look at the degrees of freedom for mother: 28 parameters, just to describe the mothers.
+
+[click] And we are not interested in these particular 29 mothers. We want to say something about lizard mothers in general.
+
+[click] So here is the idea: treat the mothers as a random sample from a population of mothers, and estimate how much they vary. That is a random effect.
+:::
+
 
 ## The linear mixed model {.smaller}
 
@@ -471,10 +546,25 @@ $$
 ::: {.fragment}
 ```r
 library(lmerTest)
-lmer(dors ~ sex + (1 | mother), data = lizard)
+fit_lmm <- lmer(dors ~ sex + (1 | mother), data = lizard)
+summary(fit_lmm)
 ```
 
-Sex effect: `r f(co["sexFemale", "Estimate"])` scales (SE `r f(co["sexFemale", "Std. Error"])`), $p$ `r fp(co["sexFemale", "Pr(>|t|)"])`
+```{r}
+#| label: tab-lmm-fixed
+data.frame(
+  Term      = rownames(co),
+  Estimate  = fnum(co[, "Estimate"]),
+  SE        = fnum(co[, "Std. Error"]),
+  df        = fnum(co[, "df"], 1),
+  t         = fnum(co[, "t value"]),
+  `p-value` = fpv(co[, "Pr(>|t|)"]),
+  check.names = FALSE
+) |>
+  nice_table(title = "Fixed effects", highlight = 2, font = 18)
+```
+
+Row **sexFemale**: females have `r f(abs(co["sexFemale", "Estimate"]))` fewer scales than males, comparing **within** mothers.
 :::
 :::
 
@@ -498,59 +588,49 @@ ggplot(pred_grid, aes(sex, fit, group = mother)) +
 
 ::::
 
-## Full output: linear mixed model {.smaller}
+::: {.notes}
+⏱ Target: 1:45 (finish by 9:05)
 
-```r
-fit_lmm <- lmer(dors ~ sex + (1 | mother), data = lizard)
-summary(fit_lmm)
-```
+This is the linear mixed model. The new term is alpha i: each mother gets her own baseline, her own intercept. But instead of estimating 29 separate values, we assume these intercepts come from a normal distribution, and we estimate one variance, sigma squared mother.
 
-::::: {.columns}
+Index i is the mother, j is the lizard within the mother.
 
-::: {.column width="58%"}
-```{r}
-data.frame(
-  Term      = rownames(co),
-  Estimate  = fnum(co[, "Estimate"]),
-  SE        = fnum(co[, "Std. Error"]),
-  df        = fnum(co[, "df"], 1),
-  t         = fnum(co[, "t value"]),
-  `p-value` = fpv(co[, "Pr(>|t|)"]),
-  check.names = FALSE
-) |>
-  nice_table(title = "Fixed effects", highlight = 2)
-```
+[click] In R, the random intercept is written "1 bar mother", in brackets. In the fixed effects table, the row sexFemale is the difference between females and males, now compared within mothers. It is clearly different from zero.
+
+[click] The plot shows what the model does: each grey line is one mother, with her own baseline but the same sex effect. The black line is the average mother.
+
+Slow down here. This is the core idea of the lecture.
 :::
 
-::: {.column width="42%"}
-```{r}
-data.frame(
-  Group      = vc$grp,
-  Variance   = fnum(vc$vcov),
-  `Std. Dev.` = fnum(vc$sdcor),
-  check.names = FALSE
-) |>
-  nice_table(title = "Random effects", highlight = c(1, 2))
-```
-:::
-
-:::::
-
-`r nobs(fit_lmm)` observations, `r ngrps(fit_lmm)` mothers: R now knows the data are **grouped**.
-
-::: {.fragment}
-**Where to look:** the **variances** are the numbers behind the ICC; row **sexFemale** is the difference between females and males.
-:::
 
 ## How alike are siblings? {.smaller}
 
 :::: v-stack
 
-The model splits the total variability into two parts:
+The **random effects** part of `summary(fit_lmm)` splits the total variability into two parts:
 
+::::: {.columns .v-center}
+
+::: {.column width="45%"}
+```{r}
+#| label: tab-lmm-random
+data.frame(
+  Group       = vc$grp,
+  Variance    = fnum(vc$vcov),
+  `Std. Dev.` = fnum(vc$sdcor),
+  check.names = FALSE
+) |>
+  nice_table(title = "Random effects", highlight = c(1, 2), font = 18)
+```
+:::
+
+::: {.column width="55%"}
 $$
 \underbrace{`r f(s2m + s2e)`}_{\text{total}} = \underbrace{`r f(s2m)`}_{\sigma^2_{mother}} + \underbrace{`r f(s2e)`}_{\sigma^2}
 $$
+:::
+
+:::::
 
 ```{r}
 #| label: plot-icc
@@ -576,15 +656,24 @@ Two lizards from the same mother are correlated with $\rho \approx$ `r f(icc)`. 
 
 ::::
 
+::: {.notes}
+⏱ Target: 1:00 (finish by 10:05)
+
+The second part of the output, the random effects, tells us how the variability is split. Out of a total variance of about 4, 1.78 is between mothers, and 2.25 is within mothers.
+
+[click] From this we get the intraclass correlation: the share of variance due to the grouping. Here it is 0.44. Two lizards from the same mother are correlated with about 0.44. The larger the ICC, the more it matters that we account for the grouping.
+:::
+
+
 ## What if $y$ is not continuous? {.smaller}
 
 :::: v-stack
 
-Remember $\epsilon \sim N(0, \sigma^2)$? It breaks down for many outcomes in CBB research:
+Remember $\epsilon \sim N(0, \sigma^2)$? It breaks down for many outcomes in research:
 
 ::: {.incremental}
 - **Binary:** chose the correct option, looked at the target (0/1)
-- **Counts:** number of vocalisations, spikes, aggressive interactions
+- **Counts:** number of vocalisations, aggressive interactions
 :::
 
 ::::: {.columns .v-center .fragment}
@@ -618,6 +707,19 @@ ggplot(learn_sum, aes(session, p)) +
 
 ::::
 
+::: {.notes}
+⏱ Target: 1:00 (finish by 11:05)
+
+So far our response was a count of scales that we treated as continuous. Remember the assumption of normally distributed errors? For many outcomes in research, it does not hold.
+
+[click] Binary outcomes: the animal chose the correct option, the infant looked at the target.
+
+[click] Or counts: vocalisations, aggressive interactions.
+
+[click] Here is a simulated example: 30 individuals doing a learning task, 10 trials per session over 8 sessions. Each trial is correct or not. All individuals improve, but they start at very different levels: grouped data again. As in a GLM, we model the log-odds of a correct answer through the logit link function.
+:::
+
+
 ## The generalized linear mixed model (GLMM) {.smaller}
 
 :::: v-stack
@@ -630,21 +732,6 @@ $$
 
 ::: {.fragment}
 ```r
-glmer(correct ~ session + (1 | id), family = binomial, data = learn)
-```
-:::
-
-::: {.incremental}
-- $\hat\beta_1 =$ `r f(beta_glmm["session"])`: for a **typical individual**, the odds of a correct answer are multiplied by **`r f(exp(beta_glmm["session"]))`** per session.
-- $\hat\sigma_b =$ `r f(sd_b)`: individuals differ a lot in their baseline performance.
-- Same logic as before: the random effect $b_i$ accounts for repeated trials from the same individual.
-:::
-
-::::
-
-## Full output: GLMM {.smaller}
-
-```r
 fit_glmm <- glmer(correct ~ session + (1 | id), family = binomial, data = learn)
 summary(fit_glmm)
 ```
@@ -653,6 +740,7 @@ summary(fit_glmm)
 
 ::: {.column width="62%"}
 ```{r}
+#| label: tab-glmm-fixed
 cg <- summary(fit_glmm)$coefficients
 data.frame(
   Term         = rownames(cg),
@@ -663,12 +751,13 @@ data.frame(
   `Odds ratio` = fnum(exp(cg[, "Estimate"])),
   check.names = FALSE
 ) |>
-  nice_table(title = "Fixed effects (log-odds scale)", highlight = 2)
+  nice_table(title = "Fixed effects (log-odds scale)", highlight = 2, font = 18)
 ```
 :::
 
 ::: {.column width="38%"}
 ```{r}
+#| label: tab-glmm-random
 vcg <- as.data.frame(VarCorr(fit_glmm))
 data.frame(
   Group       = vcg$grp,
@@ -676,18 +765,35 @@ data.frame(
   `Std. Dev.` = fnum(vcg$sdcor),
   check.names = FALSE
 ) |>
-  nice_table(title = "Random effects", highlight = 1)
+  nice_table(title = "Random effects", highlight = 1, font = 18)
 ```
 :::
 
 :::::
-
-::: {.fragment}
-**Where to look:**
-
-- Row **session**: change in **log-odds** per session for a typical individual; the **odds ratio** is `exp()` of it
-- **Std. Dev.** of `id`: how much individuals differ. There is no Residual row: for binary data, that variability comes from the Bernoulli distribution
 :::
+
+::: {.incremental}
+- Row **session**: $\hat\beta_1 =$ `r f(beta_glmm["session"])` on the log-odds scale. For a **typical individual**, the odds of a correct answer are multiplied by **`r f(exp(beta_glmm["session"]))`** per session.
+- **Std. Dev.** of `id`: $\hat\sigma_b =$ `r f(sd_b)`, individuals differ a lot in their baseline performance.
+- No `Residual` row: for binary data, the trial-to-trial variability comes from the Bernoulli distribution.
+:::
+
+::::
+
+::: {.notes}
+⏱ Target: 1:30 (finish by 12:35)
+
+The GLMM combines both ideas. Each trial is a Bernoulli outcome with probability pi. The logit of that probability is a linear predictor, and b i is the random intercept for each individual.
+
+[click] In R, we switch from lmer to glmer and add family equals binomial. Everything else looks the same.
+
+[click] The row session gives the change in log-odds per session. The odds ratio column turns it into something easier: for a typical individual, the odds of a correct answer are multiplied by this factor each session.
+
+[click] The standard deviation of the random intercept tells us how much individuals differ in their baseline performance. Here, a lot.
+
+[click] And notice: there is no residual row. For binary data, the variance is determined by the probability itself, through the Bernoulli distribution. (If asked about the ICC: annex slide.)
+:::
+
 
 ## One thing to remember {.smaller}
 
@@ -733,6 +839,21 @@ In a linear mixed model the two coincide. With a link function (logit, log), the
 
 ::::
 
+::: {.notes}
+⏱ Target: 1:15 (finish by 13:50)
+
+If you remember one thing from the GLMM part, let it be this.
+
+[click] Each grey curve is the predicted learning curve for one individual.
+
+[click] Blue is the curve of the typical individual, the one with random effect zero. Orange is the average over all individuals. They are not the same: the average curve is flatter.
+
+[click] That is why, in a GLMM, the coefficients describe the typical individual, not the population average. This matters when you write your results section.
+
+[click] In a linear mixed model the two coincide. It is the non-linear link function that makes them differ.
+:::
+
+
 ## Before you fit a mixed model, ask... {.smaller}
 
 :::: v-stack
@@ -754,7 +875,22 @@ Later on: **random slopes** and **crossed random effects** (e.g., participants a
 
 ::::
 
+::: {.notes}
+⏱ Target: 0:45 (finish by 14:35)
+
+Let me close with three questions to ask before you fit any mixed model.
+
+[click] What are my units, and how are they grouped?
+
+[click] What type is my response? That chooses the family and the link.
+
+[click] And is my question about the typical individual or about the population?
+
+[click] In the next session, we will do exactly this in R, hands-on, ideally with your own data. Later on, random slopes and crossed random effects, such as participants and items.
+:::
+
 <!-- thank you slide -->
+
 ## {}
 
 :::: columns
@@ -776,8 +912,16 @@ Thank you!
 
 ![](images/chau_mijes.jpg){.image-right}
 
+::: {.notes}
+⏱ Target: 0:10 (finish by 14:45)
+
+Thank you very much. I am happy to take questions.
+
+Stop here. Credits and annex are only for questions.
+:::
 
 <!-- credits slide -->
+
 ## Credits {.smaller}
 
 :::: v-stack
@@ -800,3 +944,276 @@ Thank you!
 :::
 
 ::::
+
+::: {.notes}
+Only if asked. The lizard data come from Prof. Geert Verbeke at KU Leuven, from the course where I learned mixed models myself.
+:::
+
+<!-- annex slides: only if asked -->
+
+# Annex {visibility="uncounted"}
+
+## Annex: ICC for a GLMM {.smaller visibility="uncounted"}
+
+:::: v-stack
+
+In a logistic GLMM there is no residual variance to plug into the ICC. A common solution is to think of a continuous **latent** propensity behind each 0/1 outcome:
+
+::::: {.columns .v-center}
+
+::: {.column width="50%"}
+$$
+y^*_{ij} = \beta_0 + b_i + \beta_1 \, \text{session}_{ij} + \epsilon_{ij}, \qquad y_{ij} = 1 \text{ if } y^*_{ij} > 0
+$$
+
+With a logit link, $\epsilon_{ij}$ follows a standard logistic distribution, whose variance is fixed:
+
+$$
+\text{Var}(\epsilon_{ij}) = \frac{\pi^2}{3} \approx 3.29
+$$
+:::
+
+::: {.column width="50%"}
+$$
+\text{ICC}_{\text{latent}} = \frac{\sigma^2_b}{\sigma^2_b + \pi^2/3} = \frac{`r f(sd_b^2)`}{`r f(sd_b^2)` + 3.29} = `r f(sd_b^2 / (sd_b^2 + pi^2 / 3))`
+$$
+
+```r
+performance::icc(fit_glmm)
+```
+:::
+
+:::::
+
+::: {.callout-note .fragment}
+Here $\pi$ is the number 3.14..., not a probability. This ICC lives on the **latent (logit) scale**: it describes how alike two trials of the same individual are in their underlying propensity. On the observed 0/1 scale, the correlation depends on the probability itself, so it is not a single number.
+:::
+
+::::
+
+::: {.notes}
+Only if asked about the ICC for a GLMM.
+
+In a logistic GLMM there is no residual variance, so we imagine a continuous latent propensity behind each 0/1 outcome. With a logit link, its residual variance is fixed at pi squared over three, about 3.29. Then the ICC is the random intercept variance divided by that variance plus 3.29.
+
+[click] Careful with the notation: here pi is the number 3.14, not a probability. And this ICC lives on the latent, logit scale. On the observed 0/1 scale, the correlation depends on the probability, so it is not a single number. In R, performance::icc does this calculation for you.
+:::
+
+
+## Annex: typical individual or population? {.smaller visibility="uncounted"}
+
+:::: v-stack
+
+::::: {.columns}
+
+::: {.column width="50%"}
+::: {.callout-note}
+## Typical individual (subject-specific)
+*How does the probability change **for a given individual**?*
+
+- What a GLMM estimates directly: effects for an individual with $b_i = 0$
+- E.g., how fast does an animal learn the task? Does an infant look more at the target in condition A than in B?
+- Session 8: **`r f(100 * plogis(beta_glmm[1] + beta_glmm[2] * 8), 0)`%** correct for the typical individual
+:::
+:::
+
+::: {.column width="50%"}
+::: {.callout-tip}
+## Population average (marginal)
+*How does the proportion change **across the population**?*
+
+- Averages over all individuals, including the very good and the very poor
+- E.g., what share of infants look at the target? What proportion of a colony shows a behaviour?
+- Session 8: **`r f(100 * mean(plogis(beta_glmm[1] + beta_glmm[2] * 8 + b_draw)), 0)`%** correct on average
+:::
+:::
+
+:::::
+
+::: {.fragment}
+**Getting the population average:** average the GLMM predictions over the random effects (as on "One thing to remember"), or fit a marginal model directly, e.g. with **generalized estimating equations** (GEE, `geepack::geeglm()`), which estimate population-average effects while accounting for the correlation within clusters. For a logistic random-intercept model, approximately:
+
+$$
+\beta_{pop} \approx \frac{\beta}{\sqrt{1 + 0.346\,\sigma^2_b}} = \frac{`r f(beta_glmm["session"])`}{\sqrt{1 + 0.346 \times `r f(sd_b^2)`}} = `r f(beta_glmm["session"] / sqrt(1 + 0.346 * sd_b^2))`
+$$
+:::
+
+::::
+
+::: {.notes}
+Only if asked what "typical individual or population" means.
+
+These are two different questions, and a GLMM answers the first one directly.
+
+The typical individual: how does the probability change for a given individual? That is a subject-specific effect, for someone with random effect zero. It is the natural question when you care about the process within individuals, for example how fast an animal learns.
+
+The population average: how does the proportion change across the whole population? Here we average over all individuals, the very good and the very poor. That is what you want for statements like "what share of infants look at the target".
+
+With a logit link the two differ: the population-average effect is always smaller, closer to zero. Compare the two percentages for session 8.
+
+[click] To get the population average, you can average the GLMM predictions over the random effects, as we did on "One thing to remember", or fit a marginal model such as GEE, generalized estimating equations. GEE models the population-average effect directly and treats the correlation within individuals as a nuisance, without random effects. For a logistic random-intercept model there is a handy approximation from Zeger, Liang and Albert (1988): divide the coefficient by the square root of 1 plus 0.346 times the random-intercept variance. In a linear mixed model, the two are the same.
+:::
+
+## Annex: fixed or random? {.smaller visibility="uncounted"}
+
+:::: v-stack
+
+::::: {.columns}
+
+::: {.column width="50%"}
+::: {.callout-note}
+## Treat a factor as **random** when...
+
+- its levels are a **sample** from a larger population (mothers, individuals, groups, schools)
+- you want to **generalise** beyond the levels you observed
+- you have **enough levels** to estimate a variance: rule of thumb, at least 5 to 6
+:::
+:::
+
+::: {.column width="50%"}
+::: {.callout-tip}
+## Treat a factor as **fixed** when...
+
+- its levels are the **ones you care about** (treatments, sex, conditions)
+- the levels would be the same if you repeated the study
+- there are **very few** levels
+:::
+:::
+
+:::::
+
+::: {.callout-important .fragment}
+## Only 2 or 3 monkeys?
+A variance estimated from 2 or 3 values is very unreliable, and models often give a singular fit. Options:
+
+- include the individual as a **fixed effect** and generalise with care
+- use a **Bayesian** model (e.g., `brms`) with an informative prior on $\sigma_b$
+- in any case, show the data of **each individual**: with so few, readers can judge them one by one
+:::
+
+::::
+
+::: {.notes}
+Only if asked when to use a random effect.
+
+There are two questions: what are the levels, and how many are there?
+
+Random when the levels are a sample from a larger population, like mothers or individuals, and you want to generalise beyond them. And you need enough levels to estimate a variance: at least five or six as a rule of thumb.
+
+Fixed when the levels are the ones you care about, like treatments or sex, or when there are very few.
+
+[click] A very common situation in primate neuroscience is two or three animals. Estimating a variance from two or three values is hopeless, and lme4 often reports a singular fit. Then I would either put the animal in as a fixed effect and be careful about generalising, or use a Bayesian model with an informative prior on the between-animal variation. And always show each animal's data.
+:::
+
+## Annex: random slopes and crossed random effects {.smaller visibility="uncounted"}
+
+:::: v-stack
+
+::::: {.columns .v-center}
+
+::: {.column width="55%"}
+```{r}
+#| label: plot-slopes
+#| fig-width: 7
+#| fig-height: 4
+set.seed(11)
+n_g <- 8
+slopes_df <- expand.grid(group = factor(1:n_g), x = c(0, 1),
+                         model = c("Random intercepts", "Random intercepts and slopes"))
+a_i <- rnorm(n_g, 0, 1)
+s_i <- rnorm(n_g, 0, 0.8)
+slopes_df$y <- 1 + a_i[slopes_df$group] +
+  ifelse(slopes_df$model == "Random intercepts", 1, 1 + s_i[slopes_df$group]) * slopes_df$x
+
+ggplot(slopes_df, aes(x, y, group = group)) +
+  geom_line(colour = "grey50", linewidth = 1) +
+  facet_wrap(~ model) +
+  scale_x_continuous(breaks = c(0, 1), labels = c("Male", "Female")) +
+  labs(x = NULL, y = "Response") +
+  theme(strip.text = element_text(face = "bold"))
+```
+:::
+
+::: {.column width="45%"}
+**Random slope:** the effect of sex may differ between mothers.
+
+```r
+lmer(dors ~ sex + (sex | mother), data = lizard)
+```
+
+::: {.fragment}
+**Crossed random effects:** every participant sees every item (typical in psycholinguistics).
+
+```r
+lmer(rt ~ condition + (1 | participant) + (1 | item),
+     data = experiment)
+```
+:::
+:::
+
+:::::
+
+::: {.callout-tip .fragment}
+Random slopes matter when the effect itself varies between clusters: ignoring that variation can make the fixed effect look more certain than it is.
+:::
+
+::::
+
+::: {.notes}
+Only if asked about random slopes or crossed designs.
+
+So far each mother had her own intercept, but the same sex effect: parallel lines, on the left. A random slope lets the effect of sex differ between mothers too: lines with different slopes, on the right. In R, you move sex inside the brackets: sex bar mother.
+
+[click] Crossed random effects appear when observations belong to two groupings at the same time, which are not nested. In a typical psycholinguistics experiment, every participant sees every item, so we add a random intercept for participant and one for item.
+
+[click] Why care? If the effect varies between clusters and the model ignores it, the standard error of the fixed effect is too small. With only a few clusters, a full random-slope model may not converge; then simplify, guided by the design and the question.
+:::
+
+## Annex: p-values and model checking {.smaller visibility="uncounted"}
+
+```{r}
+#| label: annex-pvalues
+fit0     <- lmer(dors ~ 1 + (1 | mother), data = lizard)
+lrt      <- anova(fit0, fit_lmm)
+ci_wald  <- confint(fit_lmm, parm = "sexFemale", method = "Wald")
+```
+
+:::: v-stack
+
+**Why does `lme4` give no p-values?** In mixed models the degrees of freedom of the test are not obvious, so `lme4` leaves the choice to you. Three common options, for the sex effect in the lizard model:
+
+```{r}
+#| label: tab-pvalues
+data.frame(
+  Approach = c("Satterthwaite df (lmerTest)",
+               "Likelihood-ratio test (with vs without sex)",
+               "95% Wald confidence interval"),
+  `R code` = c("summary(fit_lmm)",
+               "anova(fit0, fit_lmm)",
+               "confint(fit_lmm, method = \"Wald\")"),
+  Result = c(paste("p", fp(co["sexFemale", "Pr(>|t|)"])),
+             paste("p", fp(lrt[2, "Pr(>Chisq)"])),
+             paste0("[", fnum(ci_wald[1, 1]), ", ", fnum(ci_wald[1, 2]), "]")),
+  check.names = FALSE
+) |>
+  nice_table(font = 18)
+```
+
+::: {.fragment}
+**Checking the model**
+
+- `DHARMa::simulateResiduals(fit_glmm) |> plot()`: simulated residuals that should look uniform if the model fits, also for GLMMs.
+- **Singular fit** warning: a variance is estimated at (or near) zero. The random-effect structure is too complex for the data: simplify it, or check whether the grouping really matters.
+:::
+
+::::
+
+::: {.notes}
+Only if asked about p-values or diagnostics.
+
+lme4 does not print p-values on purpose: in mixed models, the degrees of freedom of the t-statistic are not well defined. There are three common ways out, and for the lizards they agree.
+
+The lmerTest package uses the Satterthwaite approximation for the degrees of freedom. A likelihood-ratio test compares the model with and without sex; anova refits both models with maximum likelihood for this. Or simply report a confidence interval: here it does not include zero.
+
+[click] For model checking, the DHARMa package simulates residuals from the fitted model; if the model is right, they should be uniform. This works for GLMMs, where ordinary residual plots are hard to read. And a singular fit warning means some variance is estimated at zero: the random-effect structure is too rich for the data, so simplify it.
+:::

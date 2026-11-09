@@ -210,7 +210,22 @@
 <p>Mauricio Moreno, PhD</p>
 </div></div>
 
-<img data-src="images/sample_back.jpg" class="image-left r-stretch"></section>
+<img data-src="images/sample_back.jpg" class="image-left r-stretch"><aside class="notes">
+<p>⏱ Target: 0:20 (finish by 0:20)</p>
+<p>Hello everyone, and thank you for having me. Today I would like to give you a lightning introduction to generalized linear mixed models: what they are, why we need them, and how to read them.</p>
+<p>Imagine you are early-career PhD researchers who have used linear models before, but have never met a mixed model. That is who this session is for.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
 <section id="todays-goals" class="slide level2 smaller">
 <h2>Today’s goals</h2>
 <div class="v-stack">
@@ -234,6 +249,26 @@
 </div>
 </div>
 </div>
+<aside class="notes">
+<p>⏱ Target: 0:40 (finish by 1:00)</p>
+<p>Let me start with what you will take home.</p>
+<p>[click] First, you should be able to recognise when your data are grouped, and why that is a problem for standard methods.</p>
+<p>[click] Second, explain what a random intercept is, and what the intraclass correlation tells you.</p>
+<p>[click] Third, choose between a linear mixed model and a GLMM, depending on your response.</p>
+<p>[click] And fourth, interpret the coefficients of a GLMM correctly, as effects for the typical individual.</p>
+<p>[click] At the end, we will turn these goals into three questions you can ask about your own data.</p>
+<p>Slow down here. Read each goal, do not rush.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="what-is-a-linear-model" class="slide level2 smaller">
 <h2>What is a linear model?</h2>
@@ -273,6 +308,22 @@ y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n + \epsilon
 </div>
 </div></div>
 </div>
+<aside class="notes">
+<p>⏱ Target: 1:15 (finish by 2:15)</p>
+<p>Everything today builds on the linear model, so a quick reminder. We predict a continuous response y as a weighted sum of predictors, plus an error term.</p>
+<p>[click] Beta zero is the intercept, the other betas are the effects of the predictors, and epsilon is the residual error. Notice this assumption: the errors are normally distributed, with constant variance. Keep it in mind, we will come back to it.</p>
+<p>[click] One common misunderstanding: linear does not mean a straight line. It means linear in the parameters. A quadratic term still gives a linear model, even though the fitted line is curved. An exponential model, where beta sits inside the exponent, is not linear any more.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="one-model-many-names" class="slide level2 smaller">
 <h2>One model, many names</h2>
@@ -298,6 +349,26 @@ y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n + \epsilon
 </div>
 </div>
 </div>
+<aside class="notes">
+<p>⏱ Target: 1:00 (finish by 3:15)</p>
+<p>Many methods you already know are special cases of this one model.</p>
+<p>[click] Simple and multiple regression, of course.</p>
+<p>[click] A t-test is a linear model with one binary predictor.</p>
+<p>[click] ANOVA compares group means with categorical predictors.</p>
+<p>[click] ANCOVA adds a continuous covariate.</p>
+<p>[click] And generalized linear models extend the idea to other kinds of responses, like binary data or counts, through a link function. We will need that later.</p>
+<p>[click] But all of them share one assumption: the observations are independent. [pause] So what happens when they are not? Let me show you with real data.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="a-simple-question" class="slide level2 smaller">
 <h2>A simple question</h2>
@@ -306,42 +377,7 @@ y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n + \epsilon
 <div class="column" style="width:45%;">
 <p><strong>102 lizards.</strong> Do males and females differ in the number of <strong>dorsal scales</strong>?</p>
 <div class="fragment">
-<p>A two-sample t-test (or <code>lm(dors ~ sex)</code>):</p>
-<ul>
-<li>Females minus males: -0.67 scales</li>
-<li><span class="math inline">\(p\)</span> = 0.102</li>
-</ul>
-</div>
-<div class="fragment">
-<div class="callout callout-note callout-style-simple">
-<div class="callout-body">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-content">
-<p>Conclusion: <strong>no evidence</strong> of a sex difference… right?</p>
-</div>
-</div>
-</div>
-</div>
-</div><div class="column" style="width:55%;">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="index_files/figure-revealjs/plot-sex-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div></div>
-</div>
-</section>
-<section id="full-output-t-test" class="slide level2 smaller">
-<h2>Full output: t-test</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="fu">t.test</span>(dors <span class="sc">~</span> sex, <span class="at">data =</span> lizard, <span class="at">var.equal =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="columns v-center">
-<div class="column" style="width:55%;">
+<p><code>t.test(dors ~ sex, data = lizard, var.equal = TRUE)</code></p>
 <div class="cell">
 <div class="cell-output-display">
 <div id="ybmehbemfi" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -367,7 +403,7 @@ y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n + \epsilon
   margin-left: auto;
   margin-right: auto;
   color: #333333;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: normal;
   font-style: normal;
   background-color: #FFFFFF;
@@ -393,7 +429,7 @@ y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n + \epsilon
 
 #ybmehbemfi .gt_title {
   color: #333333;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: initial;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -796,10 +832,7 @@ y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n + \epsilon
 
 <table class="gt_table caption-top" data-quarto-postprocess="true" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
 <thead>
-<tr class="gt_heading header">
-<th colspan="2" class="gt_heading gt_title gt_font_normal gt_bottom_border">Two-sample t-test</th>
-</tr>
-<tr class="gt_col_headings even">
+<tr class="gt_col_headings header">
 <th id="Statistic" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Statistic</th>
 <th id="Value" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Value</th>
 </tr>
@@ -814,20 +847,12 @@ y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n + \epsilon
 <td class="gt_row gt_left" headers="Value">34.72</td>
 </tr>
 <tr class="odd">
-<td class="gt_row gt_left" headers="Statistic">Difference (males - females)</td>
-<td class="gt_row gt_left" headers="Value">0.67</td>
+<td class="gt_row gt_left" headers="Statistic">Difference (males - females) [95% CI]</td>
+<td class="gt_row gt_left" headers="Value">0.67 [-0.14, 1.48]</td>
 </tr>
 <tr class="even">
-<td class="gt_row gt_left" headers="Statistic">95% CI of the difference</td>
-<td class="gt_row gt_left" headers="Value">[-0.14, 1.48]</td>
-</tr>
-<tr class="odd">
-<td class="gt_row gt_left" headers="Statistic">t</td>
-<td class="gt_row gt_left" headers="Value">1.65</td>
-</tr>
-<tr class="even">
-<td class="gt_row gt_left" headers="Statistic" style="background-color: #FFF3CD">df</td>
-<td class="gt_row gt_left" headers="Value" style="background-color: #FFF3CD">100</td>
+<td class="gt_row gt_left" headers="Statistic" style="background-color: #FFF3CD">t (df)</td>
+<td class="gt_row gt_left" headers="Value" style="background-color: #FFF3CD">1.65 (100)</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="Statistic" style="background-color: #FFF3CD">p-value</td>
@@ -839,13 +864,47 @@ y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n + \epsilon
 </div>
 </div>
 </div>
-</div><div class="column fragment" style="width:45%;">
-<p><strong>Where to look:</strong></p>
-<ul>
-<li><strong>p-value</strong>: the one on the previous slide</li>
-<li><strong>df = 100</strong>: R treats all 102 lizards as <strong>independent</strong> observations</li>
-</ul>
+</div>
+<div class="fragment">
+<div class="callout callout-note callout-style-simple">
+<div class="callout-body">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-content">
+<p>Conclusion: <strong>no evidence</strong> of a sex difference… right? Note the <strong>df = 100</strong>: R treats all 102 lizards as independent.</p>
+</div>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:55%;">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="index_files/figure-revealjs/plot-sex-1.png" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
 </div></div>
+</div>
+<aside class="notes">
+<p>⏱ Target: 1:00 (finish by 4:15)</p>
+<p>Here are 102 lizards. The question is simple: do males and females differ in the number of dorsal scales? On the plot, males seem to have slightly more, but there is a lot of overlap.</p>
+<p>[click] The classic answer is a two-sample t-test. The difference is small, and the p-value is about 0.10.</p>
+<p>[click] So the conclusion would be: no evidence of a sex difference. But look at the degrees of freedom: 100. The t-test treats all 102 lizards as independent pieces of information. [pause] Is that true?</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="but-wait-who-are-their-mothers" class="slide level2 smaller">
 <h2>But wait… who are their mothers?</h2>
@@ -866,6 +925,24 @@ y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n + \epsilon
 <li class="fragment">Siblings are more alike than unrelated lizards: observations are <strong>not independent</strong>.</li>
 </ul>
 </div>
+<aside class="notes">
+<p>⏱ Target: 1:30 (finish by 5:45)</p>
+<p>These 102 lizards come from 29 mothers. Here is the same data, now grouped by mother.</p>
+<p>THINK-PAIR-SHARE: ask the audience “What do you notice?” Wait at least 10 seconds in silence. Let them answer before clicking.</p>
+<p>[click] First: there is a lot of variability between mothers. Some mothers have offspring with many scales, others with few.</p>
+<p>[click] Second: within a mother, males tend to have more scales than their sisters.</p>
+<p>[click] And third: siblings are more alike than unrelated lizards. So our observations are not independent. The t-test ignored this structure.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="hierarchical-data" class="slide level2 smaller">
 <h2>Hierarchical data</h2>
@@ -891,10 +968,6 @@ y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n + \epsilon
 <li>Level 1: 102 <strong>lizards</strong> (sex measured on each lizard)</li>
 </ul></li>
 </ul>
-<p><strong>In CBB research, for example:</strong></p>
-<ul>
-<li>Social groups → individuals → trials</li>
-</ul>
 </div><div class="column fragment" style="width:45%;">
 <p>Also known as:</p>
 <ul>
@@ -917,39 +990,30 @@ y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n + \epsilon
 </div>
 </div>
 </div>
+<aside class="notes">
+<p>⏱ Target: 0:45 (finish by 6:30)</p>
+<p>This kind of structure has a name. Hierarchical data arise when we sample at several, nested levels.</p>
+<p>[click] In our case, mothers are level 2, and lizards are level 1. Sex is measured on each lizard.</p>
+<p>[click] You may also know this as repeated measures, longitudinal data, multilevel data, or, the term I want you to remember, clustered or correlated data.</p>
+<p>[click] And this is the key question of the whole session: how do we account for the association between observations from the same cluster?</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 <aside><ol class="aside-footnotes"><li id="fn1"><p>Verbeke, G. (2013). <em>Concepts of multilevel, longitudinal, and mixed models</em>. Lecture notes, KU Leuven.</p></li></ol></aside></section>
 <section id="option-1-mother-as-a-fixed-effect" class="slide level2 smaller">
 <h2>Option 1: mother as a fixed effect?</h2>
 <div class="v-stack">
-<div class="sourceCode" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="fu">lm</span>(dors <span class="sc">~</span> mother <span class="sc">+</span> sex, <span class="at">data =</span> lizard)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<ul>
-<li class="fragment">It works: the sex effect is now significant (<span class="math inline">\(p\)</span> = 0.009).</li>
-<li class="fragment">But it spends <strong>28 parameters</strong> just on the mothers.</li>
-<li class="fragment">And we are not interested in <em>these</em> 29 mothers, but in lizard mothers <strong>in general</strong>.</li>
-</ul>
-<div class="fragment">
-<div class="callout callout-tip callout-titled callout-style-simple">
-<div class="callout-body">
-<div class="callout-title">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<p><strong>Idea</strong></p>
-</div>
-<div class="callout-content">
-<p>Treat the mothers as a <strong>random sample</strong> from a population of mothers, and estimate how much they <strong>vary</strong>.</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="full-output-mother-as-a-fixed-effect" class="slide level2 smaller">
-<h2>Full output: mother as a fixed effect</h2>
-<div class="sourceCode" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a>fit_fixed <span class="ot">&lt;-</span> <span class="fu">lm</span>(dors <span class="sc">~</span> mother <span class="sc">+</span> sex, <span class="at">data =</span> lizard)</span>
-<span id="cb3-2"><a></a><span class="fu">anova</span>(fit_fixed)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="fu">anova</span>(<span class="fu">lm</span>(dors <span class="sc">~</span> mother <span class="sc">+</span> sex, <span class="at">data =</span> lizard))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="columns v-center">
-<div class="column" style="width:62%;">
+<div class="column" style="width:55%;">
 <div class="cell">
 <div class="cell-output-display">
 <div id="rdujsxuccx" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -975,7 +1039,7 @@ y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n + \epsilon
   margin-left: auto;
   margin-right: auto;
   color: #333333;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: normal;
   font-style: normal;
   background-color: #FFFFFF;
@@ -1001,7 +1065,7 @@ y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n + \epsilon
 
 #rdujsxuccx .gt_title {
   color: #333333;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: initial;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1404,10 +1468,7 @@ y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n + \epsilon
 
 <table class="gt_table caption-top" data-quarto-postprocess="true" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
 <thead>
-<tr class="gt_heading header">
-<th colspan="6" class="gt_heading gt_title gt_font_normal gt_bottom_border">ANOVA table</th>
-</tr>
-<tr class="gt_col_headings even">
+<tr class="gt_col_headings header">
 <th id="Term" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Term</th>
 <th id="Df" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Df</th>
 <th id="Sum-Sq" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Sum Sq</th>
@@ -1447,13 +1508,47 @@ y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n + \epsilon
 </div>
 </div>
 </div>
-</div><div class="column fragment" style="width:38%;">
-<p><strong>Where to look:</strong></p>
+</div><div class="column" style="width:45%;">
 <ul>
-<li>Row <strong>sex</strong>: the sex effect, tested <strong>after</strong> adjusting for mother</li>
-<li>Row <strong>mother</strong>: <strong>Df = 28</strong>, the parameters spent on the mothers</li>
+<li class="fragment">It works: the sex effect, tested <strong>after</strong> adjusting for mother, is now significant (<span class="math inline">\(p\)</span> = 0.009).</li>
+<li class="fragment">But it spends <strong>28 parameters</strong> (row mother, <code>Df</code>) just on the mothers.</li>
+<li class="fragment">And we are not interested in <em>these</em> 29 mothers, but in lizard mothers <strong>in general</strong>.</li>
 </ul>
 </div></div>
+<div class="fragment">
+<div class="callout callout-tip callout-titled callout-style-simple">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Idea</strong></p>
+</div>
+<div class="callout-content">
+<p>Treat the mothers as a <strong>random sample</strong> from a population of mothers, and estimate how much they <strong>vary</strong>.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<aside class="notes">
+<p>⏱ Target: 0:50 (finish by 7:20)</p>
+<p>The first idea most people have is to add mother as a fixed effect, as in a two-way ANOVA.</p>
+<p>[click] And it works: once we adjust for mother, the sex effect becomes significant.</p>
+<p>[click] But look at the degrees of freedom for mother: 28 parameters, just to describe the mothers.</p>
+<p>[click] And we are not interested in these particular 29 mothers. We want to say something about lizard mothers in general.</p>
+<p>[click] So here is the idea: treat the mothers as a random sample from a population of mothers, and estimate how much they vary. That is a random effect.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="the-linear-mixed-model" class="slide level2 smaller">
 <h2>The linear mixed model</h2>
@@ -1471,29 +1566,9 @@ y_{ij} = \beta_0 + \alpha_i + \beta_1 \, \text{sex}_{ij} + \epsilon_{ij}
 <li><span class="math inline">\(\alpha_i\)</span>: <strong>random intercept</strong>, each mother has her own baseline</li>
 </ul>
 <div class="fragment">
-<div class="sourceCode" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a><span class="fu">library</span>(lmerTest)</span>
-<span id="cb4-2"><a></a><span class="fu">lmer</span>(dors <span class="sc">~</span> sex <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> mother), <span class="at">data =</span> lizard)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Sex effect: -0.83 scales (SE 0.32), <span class="math inline">\(p\)</span> = 0.012</p>
-</div>
-</div><div class="column fragment" style="width:50%;">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="index_files/figure-revealjs/plot-ranint-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div></div>
-</div>
-</section>
-<section id="full-output-linear-mixed-model" class="slide level2 smaller">
-<h2>Full output: linear mixed model</h2>
-<div class="sourceCode" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a>fit_lmm <span class="ot">&lt;-</span> <span class="fu">lmer</span>(dors <span class="sc">~</span> sex <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> mother), <span class="at">data =</span> lizard)</span>
-<span id="cb5-2"><a></a><span class="fu">summary</span>(fit_lmm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="columns">
-<div class="column" style="width:58%;">
+<div class="sourceCode" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="fu">library</span>(lmerTest)</span>
+<span id="cb2-2"><a></a>fit_lmm <span class="ot">&lt;-</span> <span class="fu">lmer</span>(dors <span class="sc">~</span> sex <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> mother), <span class="at">data =</span> lizard)</span>
+<span id="cb2-3"><a></a><span class="fu">summary</span>(fit_lmm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell">
 <div class="cell-output-display">
 <div id="drioyaezrl" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -1519,7 +1594,7 @@ y_{ij} = \beta_0 + \alpha_i + \beta_1 \, \text{sex}_{ij} + \epsilon_{ij}
   margin-left: auto;
   margin-right: auto;
   color: #333333;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: normal;
   font-style: normal;
   background-color: #FFFFFF;
@@ -1545,7 +1620,7 @@ y_{ij} = \beta_0 + \alpha_i + \beta_1 \, \text{sex}_{ij} + \epsilon_{ij}
 
 #drioyaezrl .gt_title {
   color: #333333;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: initial;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1983,7 +2058,45 @@ y_{ij} = \beta_0 + \alpha_i + \beta_1 \, \text{sex}_{ij} + \epsilon_{ij}
 </div>
 </div>
 </div>
-</div><div class="column" style="width:42%;">
+<p>Row <strong>sexFemale</strong>: females have 0.83 fewer scales than males, comparing <strong>within</strong> mothers.</p>
+</div>
+</div><div class="column fragment" style="width:50%;">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="index_files/figure-revealjs/plot-ranint-1.png" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</div></div>
+</div>
+<aside class="notes">
+<p>⏱ Target: 1:45 (finish by 9:05)</p>
+<p>This is the linear mixed model. The new term is alpha i: each mother gets her own baseline, her own intercept. But instead of estimating 29 separate values, we assume these intercepts come from a normal distribution, and we estimate one variance, sigma squared mother.</p>
+<p>Index i is the mother, j is the lizard within the mother.</p>
+<p>[click] In R, the random intercept is written “1 bar mother”, in brackets. In the fixed effects table, the row sexFemale is the difference between females and males, now compared within mothers. It is clearly different from zero.</p>
+<p>[click] The plot shows what the model does: each grey line is one mother, with her own baseline but the same sex effect. The black line is the average mother.</p>
+<p>Slow down here. This is the core idea of the lecture.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="how-alike-are-siblings" class="slide level2 smaller">
+<h2>How alike are siblings?</h2>
+<div class="v-stack">
+<p>The <strong>random effects</strong> part of <code>summary(fit_lmm)</code> splits the total variability into two parts:</p>
+<div class="columns v-center">
+<div class="column" style="width:45%;">
 <div class="cell">
 <div class="cell-output-display">
 <div id="vzuisetzwu" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -2009,7 +2122,7 @@ y_{ij} = \beta_0 + \alpha_i + \beta_1 \, \text{sex}_{ij} + \epsilon_{ij}
   margin-left: auto;
   margin-right: auto;
   color: #333333;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: normal;
   font-style: normal;
   background-color: #FFFFFF;
@@ -2035,7 +2148,7 @@ y_{ij} = \beta_0 + \alpha_i + \beta_1 \, \text{sex}_{ij} + \epsilon_{ij}
 
 #vzuisetzwu .gt_title {
   color: #333333;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: initial;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -2464,19 +2577,11 @@ y_{ij} = \beta_0 + \alpha_i + \beta_1 \, \text{sex}_{ij} + \epsilon_{ij}
 </div>
 </div>
 </div>
-</div></div>
-<p>102 observations, 29 mothers: R now knows the data are <strong>grouped</strong>.</p>
-<div class="fragment">
-<p><strong>Where to look:</strong> the <strong>variances</strong> are the numbers behind the ICC; row <strong>sexFemale</strong> is the difference between females and males.</p>
-</div>
-</section>
-<section id="how-alike-are-siblings" class="slide level2 smaller">
-<h2>How alike are siblings?</h2>
-<div class="v-stack">
-<p>The model splits the total variability into two parts:</p>
+</div><div class="column" style="width:55%;">
 <p><span class="math display">\[
 \underbrace{4.03}_{\text{total}} = \underbrace{1.78}_{\sigma^2_{mother}} + \underbrace{2.25}_{\sigma^2}
 \]</span></p>
+</div></div>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -2491,14 +2596,29 @@ y_{ij} = \beta_0 + \alpha_i + \beta_1 \, \text{sex}_{ij} + \epsilon_{ij}
 <p>Two lizards from the same mother are correlated with <span class="math inline">\(\rho \approx\)</span> 0.44. The larger the ICC, the more it matters to account for the grouping.</p>
 </div>
 </div>
+<aside class="notes">
+<p>⏱ Target: 1:00 (finish by 10:05)</p>
+<p>The second part of the output, the random effects, tells us how the variability is split. Out of a total variance of about 4, 1.78 is between mothers, and 2.25 is within mothers.</p>
+<p>[click] From this we get the intraclass correlation: the share of variance due to the grouping. Here it is 0.44. Two lizards from the same mother are correlated with about 0.44. The larger the ICC, the more it matters that we account for the grouping.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="what-if-y-is-not-continuous" class="slide level2 smaller">
 <h2>What if <span class="math inline">\(y\)</span> is not continuous?</h2>
 <div class="v-stack">
-<p>Remember <span class="math inline">\(\epsilon \sim N(0, \sigma^2)\)</span>? It breaks down for many outcomes in CBB research:</p>
+<p>Remember <span class="math inline">\(\epsilon \sim N(0, \sigma^2)\)</span>? It breaks down for many outcomes in research:</p>
 <ul>
 <li class="fragment"><strong>Binary:</strong> chose the correct option, looked at the target (0/1)</li>
-<li class="fragment"><strong>Counts:</strong> number of vocalisations, spikes, aggressive interactions</li>
+<li class="fragment"><strong>Counts:</strong> number of vocalisations, aggressive interactions</li>
 </ul>
 <div class="columns v-center fragment">
 <div class="column" style="width:45%;">
@@ -2519,6 +2639,23 @@ y_{ij} = \beta_0 + \alpha_i + \beta_1 \, \text{sex}_{ij} + \epsilon_{ij}
 </div>
 </div></div>
 </div>
+<aside class="notes">
+<p>⏱ Target: 1:00 (finish by 11:05)</p>
+<p>So far our response was a count of scales that we treated as continuous. Remember the assumption of normally distributed errors? For many outcomes in research, it does not hold.</p>
+<p>[click] Binary outcomes: the animal chose the correct option, the infant looked at the target.</p>
+<p>[click] Or counts: vocalisations, aggressive interactions.</p>
+<p>[click] Here is a simulated example: 30 individuals doing a learning task, 10 trials per session over 8 sessions. Each trial is correct or not. All individuals improve, but they start at very different levels: grouped data again. As in a GLM, we model the log-odds of a correct answer through the logit link function.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="the-generalized-linear-mixed-model-glmm" class="slide level2 smaller">
 <h2>The generalized linear mixed model (GLMM)</h2>
@@ -2529,19 +2666,8 @@ y_{ij} = \beta_0 + \alpha_i + \beta_1 \, \text{sex}_{ij} + \epsilon_{ij}
 b_i \sim N(0, \sigma^2_b)
 \]</span></p>
 <div class="fragment">
-<div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a><span class="fu">glmer</span>(correct <span class="sc">~</span> session <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> id), <span class="at">family =</span> binomial, <span class="at">data =</span> learn)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<ul>
-<li class="fragment"><span class="math inline">\(\hat\beta_1 =\)</span> 0.50: for a <strong>typical individual</strong>, the odds of a correct answer are multiplied by <strong>1.65</strong> per session.</li>
-<li class="fragment"><span class="math inline">\(\hat\sigma_b =\)</span> 1.60: individuals differ a lot in their baseline performance.</li>
-<li class="fragment">Same logic as before: the random effect <span class="math inline">\(b_i\)</span> accounts for repeated trials from the same individual.</li>
-</ul>
-</div>
-</section>
-<section id="full-output-glmm" class="slide level2 smaller">
-<h2>Full output: GLMM</h2>
-<div class="sourceCode" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a>fit_glmm <span class="ot">&lt;-</span> <span class="fu">glmer</span>(correct <span class="sc">~</span> session <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> id), <span class="at">family =</span> binomial, <span class="at">data =</span> learn)</span>
-<span id="cb7-2"><a></a><span class="fu">summary</span>(fit_glmm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a>fit_glmm <span class="ot">&lt;-</span> <span class="fu">glmer</span>(correct <span class="sc">~</span> session <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> id), <span class="at">family =</span> binomial, <span class="at">data =</span> learn)</span>
+<span id="cb3-2"><a></a><span class="fu">summary</span>(fit_glmm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="columns">
 <div class="column" style="width:62%;">
 <div class="cell">
@@ -2569,7 +2695,7 @@ b_i \sim N(0, \sigma^2_b)
   margin-left: auto;
   margin-right: auto;
   color: #333333;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: normal;
   font-style: normal;
   background-color: #FFFFFF;
@@ -2595,7 +2721,7 @@ b_i \sim N(0, \sigma^2_b)
 
 #rcfjdonnyt .gt_title {
   color: #333333;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: initial;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -3059,7 +3185,7 @@ b_i \sim N(0, \sigma^2_b)
   margin-left: auto;
   margin-right: auto;
   color: #333333;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: normal;
   font-style: normal;
   background-color: #FFFFFF;
@@ -3085,7 +3211,7 @@ b_i \sim N(0, \sigma^2_b)
 
 #xtiabgnxjb .gt_title {
   color: #333333;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: initial;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -3510,13 +3636,31 @@ b_i \sim N(0, \sigma^2_b)
 </div>
 </div>
 </div></div>
-<div class="fragment">
-<p><strong>Where to look:</strong></p>
+</div>
 <ul>
-<li>Row <strong>session</strong>: change in <strong>log-odds</strong> per session for a typical individual; the <strong>odds ratio</strong> is <code>exp()</code> of it</li>
-<li><strong>Std. Dev.</strong> of <code>id</code>: how much individuals differ. There is no Residual row: for binary data, that variability comes from the Bernoulli distribution</li>
+<li class="fragment">Row <strong>session</strong>: <span class="math inline">\(\hat\beta_1 =\)</span> 0.50 on the log-odds scale. For a <strong>typical individual</strong>, the odds of a correct answer are multiplied by <strong>1.65</strong> per session.</li>
+<li class="fragment"><strong>Std. Dev.</strong> of <code>id</code>: <span class="math inline">\(\hat\sigma_b =\)</span> 1.60, individuals differ a lot in their baseline performance.</li>
+<li class="fragment">No <code>Residual</code> row: for binary data, the trial-to-trial variability comes from the Bernoulli distribution.</li>
 </ul>
 </div>
+<aside class="notes">
+<p>⏱ Target: 1:30 (finish by 12:35)</p>
+<p>The GLMM combines both ideas. Each trial is a Bernoulli outcome with probability pi. The logit of that probability is a linear predictor, and b i is the random intercept for each individual.</p>
+<p>[click] In R, we switch from lmer to glmer and add family equals binomial. Everything else looks the same.</p>
+<p>[click] The row session gives the change in log-odds per session. The odds ratio column turns it into something easier: for a typical individual, the odds of a correct answer are multiplied by this factor each session.</p>
+<p>[click] The standard deviation of the random intercept tells us how much individuals differ in their baseline performance. Here, a lot.</p>
+<p>[click] And notice: there is no residual row. For binary data, the variance is determined by the probability itself, through the Bernoulli distribution. (If asked about the ICC: annex slide.)</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="one-thing-to-remember" class="slide level2 smaller">
 <h2>One thing to remember</h2>
@@ -3552,6 +3696,24 @@ b_i \sim N(0, \sigma^2_b)
 </div>
 </div></div>
 </div>
+<aside class="notes">
+<p>⏱ Target: 1:15 (finish by 13:50)</p>
+<p>If you remember one thing from the GLMM part, let it be this.</p>
+<p>[click] Each grey curve is the predicted learning curve for one individual.</p>
+<p>[click] Blue is the curve of the typical individual, the one with random effect zero. Orange is the average over all individuals. They are not the same: the average curve is flatter.</p>
+<p>[click] That is why, in a GLMM, the coefficients describe the typical individual, not the population average. This matters when you write your results section.</p>
+<p>[click] In a linear mixed model the two coincide. It is the non-linear link function that makes them differ.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="before-you-fit-a-mixed-model-ask" class="slide level2 smaller">
 <h2>Before you fit a mixed model, ask…</h2>
@@ -3578,6 +3740,24 @@ b_i \sim N(0, \sigma^2_b)
 </div>
 </div>
 </div>
+<aside class="notes">
+<p>⏱ Target: 0:45 (finish by 14:35)</p>
+<p>Let me close with three questions to ask before you fit any mixed model.</p>
+<p>[click] What are my units, and how are they grouped?</p>
+<p>[click] What type is my response? That chooses the family and the link.</p>
+<p>[click] And is my question about the typical individual or about the population?</p>
+<p>[click] In the next session, we will do exactly this in R, hands-on, ideally with your own data. Later on, random slopes and crossed random effects, such as participants and items.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 <!-- thank you slide -->
 </section>
 <section id="section-1" class="slide level2">
@@ -3591,8 +3771,23 @@ b_i \sim N(0, \sigma^2_b)
 
 </div></div>
 
+<img data-src="images/chau_mijes.jpg" class="image-right r-stretch"><aside class="notes">
+<p>⏱ Target: 0:10 (finish by 14:45)</p>
+<p>Thank you very much. I am happy to take questions.</p>
+<p>Stop here. Credits and annex are only for questions.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 <!-- credits slide -->
-<img data-src="images/chau_mijes.jpg" class="image-right r-stretch"></section>
+</section>
 <section id="credits" class="slide level2 smaller">
 <h2>Credits</h2>
 <div class="v-stack">
@@ -3630,9 +3825,789 @@ b_i \sim N(0, \sigma^2_b)
 </div>
 </div>
 </div>
-
+<aside class="notes">
+<p>Only if asked. The lizard data come from Prof.&nbsp;Geert Verbeke at KU Leuven, from the course where I learned mixed models myself.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+<!-- annex slides: only if asked -->
+</section>
+<section>
+<section id="annex" class="title-slide slide level1 center" data-visibility="uncounted">
+<h1>Annex</h1>
 
 </section>
+<section id="annex-icc-for-a-glmm" class="slide level2 smaller" data-visibility="uncounted">
+<h2>Annex: ICC for a GLMM</h2>
+<div class="v-stack">
+<p>In a logistic GLMM there is no residual variance to plug into the ICC. A common solution is to think of a continuous <strong>latent</strong> propensity behind each 0/1 outcome:</p>
+<div class="columns v-center">
+<div class="column" style="width:50%;">
+<p><span class="math display">\[
+y^*_{ij} = \beta_0 + b_i + \beta_1 \, \text{session}_{ij} + \epsilon_{ij}, \qquad y_{ij} = 1 \text{ if } y^*_{ij} &gt; 0
+\]</span></p>
+<p>With a logit link, <span class="math inline">\(\epsilon_{ij}\)</span> follows a standard logistic distribution, whose variance is fixed:</p>
+<p><span class="math display">\[
+\text{Var}(\epsilon_{ij}) = \frac{\pi^2}{3} \approx 3.29
+\]</span></p>
+</div><div class="column" style="width:50%;">
+<p><span class="math display">\[
+\text{ICC}_{\text{latent}} = \frac{\sigma^2_b}{\sigma^2_b + \pi^2/3} = \frac{2.57}{2.57 + 3.29} = 0.44
+\]</span></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a>performance<span class="sc">::</span><span class="fu">icc</span>(fit_glmm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div></div>
+<div class="fragment">
+<div class="callout callout-note callout-style-simple">
+<div class="callout-body">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-content">
+<p>Here <span class="math inline">\(\pi\)</span> is the number 3.14…, not a probability. This ICC lives on the <strong>latent (logit) scale</strong>: it describes how alike two trials of the same individual are in their underlying propensity. On the observed 0/1 scale, the correlation depends on the probability itself, so it is not a single number.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<aside class="notes">
+<p>Only if asked about the ICC for a GLMM.</p>
+<p>In a logistic GLMM there is no residual variance, so we imagine a continuous latent propensity behind each 0/1 outcome. With a logit link, its residual variance is fixed at pi squared over three, about 3.29. Then the ICC is the random intercept variance divided by that variance plus 3.29.</p>
+<p>[click] Careful with the notation: here pi is the number 3.14, not a probability. And this ICC lives on the latent, logit scale. On the observed 0/1 scale, the correlation depends on the probability, so it is not a single number. In R, performance::icc does this calculation for you.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="annex-typical-individual-or-population" class="slide level2 smaller" data-visibility="uncounted">
+<h2>Annex: typical individual or population?</h2>
+<div class="v-stack">
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="callout callout-note callout-titled callout-style-simple">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Typical individual (subject-specific)</strong></p>
+</div>
+<div class="callout-content">
+<p><em>How does the probability change <strong>for a given individual</strong>?</em></p>
+<ul>
+<li>What a GLMM estimates directly: effects for an individual with <span class="math inline">\(b_i = 0\)</span></li>
+<li>E.g., how fast does an animal learn the task? Does an infant look more at the target in condition A than in B?</li>
+<li>Session 8: <strong>86%</strong> correct for the typical individual</li>
+</ul>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:50%;">
+<div class="callout callout-tip callout-titled callout-style-simple">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Population average (marginal)</strong></p>
+</div>
+<div class="callout-content">
+<p><em>How does the proportion change <strong>across the population</strong>?</em></p>
+<ul>
+<li>Averages over all individuals, including the very good and the very poor</li>
+<li>E.g., what share of infants look at the target? What proportion of a colony shows a behaviour?</li>
+<li>Session 8: <strong>77%</strong> correct on average</li>
+</ul>
+</div>
+</div>
+</div>
+</div></div>
+<div class="fragment">
+<p><strong>Getting the population average:</strong> average the GLMM predictions over the random effects (as on “One thing to remember”), or fit a marginal model directly, e.g.&nbsp;with <strong>generalized estimating equations</strong> (GEE, <code>geepack::geeglm()</code>), which estimate population-average effects while accounting for the correlation within clusters. For a logistic random-intercept model, approximately:</p>
+<p><span class="math display">\[
+\beta_{pop} \approx \frac{\beta}{\sqrt{1 + 0.346\,\sigma^2_b}} = \frac{0.50}{\sqrt{1 + 0.346 \times 2.57}} = 0.36
+\]</span></p>
+</div>
+</div>
+<aside class="notes">
+<p>Only if asked what “typical individual or population” means.</p>
+<p>These are two different questions, and a GLMM answers the first one directly.</p>
+<p>The typical individual: how does the probability change for a given individual? That is a subject-specific effect, for someone with random effect zero. It is the natural question when you care about the process within individuals, for example how fast an animal learns.</p>
+<p>The population average: how does the proportion change across the whole population? Here we average over all individuals, the very good and the very poor. That is what you want for statements like “what share of infants look at the target”.</p>
+<p>With a logit link the two differ: the population-average effect is always smaller, closer to zero. Compare the two percentages for session 8.</p>
+<p>[click] To get the population average, you can average the GLMM predictions over the random effects, as we did on “One thing to remember”, or fit a marginal model such as GEE, generalized estimating equations. GEE models the population-average effect directly and treats the correlation within individuals as a nuisance, without random effects. For a logistic random-intercept model there is a handy approximation from Zeger, Liang and Albert (1988): divide the coefficient by the square root of 1 plus 0.346 times the random-intercept variance. In a linear mixed model, the two are the same.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="annex-fixed-or-random" class="slide level2 smaller" data-visibility="uncounted">
+<h2>Annex: fixed or random?</h2>
+<div class="v-stack">
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="callout callout-note callout-titled callout-style-simple">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Treat a factor as <strong>random</strong> when…</strong></p>
+</div>
+<div class="callout-content">
+<ul>
+<li>its levels are a <strong>sample</strong> from a larger population (mothers, individuals, groups, schools)</li>
+<li>you want to <strong>generalise</strong> beyond the levels you observed</li>
+<li>you have <strong>enough levels</strong> to estimate a variance: rule of thumb, at least 5 to 6</li>
+</ul>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:50%;">
+<div class="callout callout-tip callout-titled callout-style-simple">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Treat a factor as <strong>fixed</strong> when…</strong></p>
+</div>
+<div class="callout-content">
+<ul>
+<li>its levels are the <strong>ones you care about</strong> (treatments, sex, conditions)</li>
+<li>the levels would be the same if you repeated the study</li>
+<li>there are <strong>very few</strong> levels</li>
+</ul>
+</div>
+</div>
+</div>
+</div></div>
+<div class="fragment">
+<div class="callout callout-important callout-titled callout-style-simple">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Only 2 or 3 monkeys?</strong></p>
+</div>
+<div class="callout-content">
+<p>A variance estimated from 2 or 3 values is very unreliable, and models often give a singular fit. Options:</p>
+<ul>
+<li>include the individual as a <strong>fixed effect</strong> and generalise with care</li>
+<li>use a <strong>Bayesian</strong> model (e.g., <code>brms</code>) with an informative prior on <span class="math inline">\(\sigma_b\)</span></li>
+<li>in any case, show the data of <strong>each individual</strong>: with so few, readers can judge them one by one</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<aside class="notes">
+<p>Only if asked when to use a random effect.</p>
+<p>There are two questions: what are the levels, and how many are there?</p>
+<p>Random when the levels are a sample from a larger population, like mothers or individuals, and you want to generalise beyond them. And you need enough levels to estimate a variance: at least five or six as a rule of thumb.</p>
+<p>Fixed when the levels are the ones you care about, like treatments or sex, or when there are very few.</p>
+<p>[click] A very common situation in primate neuroscience is two or three animals. Estimating a variance from two or three values is hopeless, and lme4 often reports a singular fit. Then I would either put the animal in as a fixed effect and be careful about generalising, or use a Bayesian model with an informative prior on the between-animal variation. And always show each animal’s data.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="annex-random-slopes-and-crossed-random-effects" class="slide level2 smaller" data-visibility="uncounted">
+<h2>Annex: random slopes and crossed random effects</h2>
+<div class="v-stack">
+<div class="columns v-center">
+<div class="column" style="width:55%;">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="index_files/figure-revealjs/plot-slopes-1.png" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:45%;">
+<p><strong>Random slope:</strong> the effect of sex may differ between mothers.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a><span class="fu">lmer</span>(dors <span class="sc">~</span> sex <span class="sc">+</span> (sex <span class="sc">|</span> mother), <span class="at">data =</span> lizard)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="fragment">
+<p><strong>Crossed random effects:</strong> every participant sees every item (typical in psycholinguistics).</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a><span class="fu">lmer</span>(rt <span class="sc">~</span> condition <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> participant) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> item),</span>
+<span id="cb6-2"><a></a>     <span class="at">data =</span> experiment)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div></div>
+<div class="fragment">
+<div class="callout callout-tip callout-style-simple">
+<div class="callout-body">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-content">
+<p>Random slopes matter when the effect itself varies between clusters: ignoring that variation can make the fixed effect look more certain than it is.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<aside class="notes">
+<p>Only if asked about random slopes or crossed designs.</p>
+<p>So far each mother had her own intercept, but the same sex effect: parallel lines, on the left. A random slope lets the effect of sex differ between mothers too: lines with different slopes, on the right. In R, you move sex inside the brackets: sex bar mother.</p>
+<p>[click] Crossed random effects appear when observations belong to two groupings at the same time, which are not nested. In a typical psycholinguistics experiment, every participant sees every item, so we add a random intercept for participant and one for item.</p>
+<p>[click] Why care? If the effect varies between clusters and the model ignores it, the standard error of the fixed effect is too small. With only a few clusters, a full random-slope model may not converge; then simplify, guided by the design and the question.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="annex-p-values-and-model-checking" class="slide level2 smaller" data-visibility="uncounted">
+<h2>Annex: p-values and model checking</h2>
+<div class="v-stack">
+<p><strong>Why does <code>lme4</code> give no p-values?</strong> In mixed models the degrees of freedom of the test are not obvious, so <code>lme4</code> leaves the choice to you. Three common options, for the sex effect in the lizard model:</p>
+<div class="cell">
+<div class="cell-output-display">
+<div id="krlbcjpzkb" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#krlbcjpzkb table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#krlbcjpzkb thead, #krlbcjpzkb tbody, #krlbcjpzkb tfoot, #krlbcjpzkb tr, #krlbcjpzkb td, #krlbcjpzkb th {
+  border-style: none;
+}
+
+#krlbcjpzkb p {
+  margin: 0;
+  padding: 0;
+}
+
+#krlbcjpzkb .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 18px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: 100%;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#krlbcjpzkb .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#krlbcjpzkb .gt_title {
+  color: #333333;
+  font-size: 20px;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#krlbcjpzkb .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#krlbcjpzkb .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#krlbcjpzkb .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#krlbcjpzkb .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#krlbcjpzkb .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: bold;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#krlbcjpzkb .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: bold;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#krlbcjpzkb .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#krlbcjpzkb .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#krlbcjpzkb .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#krlbcjpzkb .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#krlbcjpzkb .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#krlbcjpzkb .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#krlbcjpzkb .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#krlbcjpzkb .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#krlbcjpzkb .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#krlbcjpzkb .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#krlbcjpzkb .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#krlbcjpzkb .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#krlbcjpzkb .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#krlbcjpzkb .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#krlbcjpzkb .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#krlbcjpzkb .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#krlbcjpzkb .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#krlbcjpzkb .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#krlbcjpzkb .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#krlbcjpzkb .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#krlbcjpzkb .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#krlbcjpzkb .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#krlbcjpzkb .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#krlbcjpzkb .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#krlbcjpzkb .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#krlbcjpzkb .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#krlbcjpzkb .gt_left {
+  text-align: left;
+}
+
+#krlbcjpzkb .gt_center {
+  text-align: center;
+}
+
+#krlbcjpzkb .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#krlbcjpzkb .gt_font_normal {
+  font-weight: normal;
+}
+
+#krlbcjpzkb .gt_font_bold {
+  font-weight: bold;
+}
+
+#krlbcjpzkb .gt_font_italic {
+  font-style: italic;
+}
+
+#krlbcjpzkb .gt_super {
+  font-size: 65%;
+}
+
+#krlbcjpzkb .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#krlbcjpzkb .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#krlbcjpzkb .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#krlbcjpzkb .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#krlbcjpzkb .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#krlbcjpzkb .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#krlbcjpzkb .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#krlbcjpzkb .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#krlbcjpzkb div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table caption-top" data-quarto-postprocess="true" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_col_headings header">
+<th id="Approach" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Approach</th>
+<th id="R-code" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">R code</th>
+<th id="Result" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Result</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_left" headers="Approach">Satterthwaite df (lmerTest)</td>
+<td class="gt_row gt_left" headers="R-code">summary(fit_lmm)</td>
+<td class="gt_row gt_left" headers="Result">p = 0.012</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="Approach">Likelihood-ratio test (with vs without sex)</td>
+<td class="gt_row gt_left" headers="R-code">anova(fit0, fit_lmm)</td>
+<td class="gt_row gt_left" headers="Result">p = 0.012</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="Approach">95% Wald confidence interval</td>
+<td class="gt_row gt_left" headers="R-code">confint(fit_lmm, method = "Wald")</td>
+<td class="gt_row gt_left" headers="Result">[-1.46, -0.20]</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div class="fragment">
+<p><strong>Checking the model</strong></p>
+<ul>
+<li><code>DHARMa::simulateResiduals(fit_glmm) |&gt; plot()</code>: simulated residuals that should look uniform if the model fits, also for GLMMs.</li>
+<li><strong>Singular fit</strong> warning: a variance is estimated at (or near) zero. The random-effect structure is too complex for the data: simplify it, or check whether the grouping really matters.</li>
+</ul>
+</div>
+</div>
+<aside class="notes">
+<p>Only if asked about p-values or diagnostics.</p>
+<p>lme4 does not print p-values on purpose: in mixed models, the degrees of freedom of the t-statistic are not well defined. There are three common ways out, and for the lizards they agree.</p>
+<p>The lmerTest package uses the Satterthwaite approximation for the degrees of freedom. A likelihood-ratio test compares the model with and without sex; anova refits both models with maximum likelihood for this. Or simply report a confidence interval: here it does not include zero.</p>
+<p>[click] For model checking, the DHARMa package simulates residuals from the fitted model; if the model is right, they should be uniform. This works for GLMMs, where ordinary residual plots are hard to read. And a singular fit warning means some variance is estimated at zero: the random-effect structure is too rich for the data, so simplify it.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+
+
+</section></section>
 
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
