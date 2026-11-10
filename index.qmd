@@ -470,6 +470,10 @@ This kind of structure has a name. Hierarchical data arise when we sample at sev
 
 :::: v-stack
 
+$$
+y_{ij} = \beta_0 + \underbrace{\beta_1 \, \text{mother}_i}_{28 \text{ parameters}} + \beta_2 \, \text{sex}_{ij} + \epsilon_{ij}, \qquad \epsilon_{ij} \sim N(0, \sigma^2)
+$$
+
 ```r
 anova(lm(dors ~ mother + sex, data = lizard))
 ```
@@ -513,7 +517,7 @@ Treat the mothers as a **random sample** from a population of mothers, and estim
 ::: {.notes}
 ⏱ Target: 0:50 (finish by 7:20)
 
-The first idea most people have is to add mother as a fixed effect, as in a two-way ANOVA.
+The first idea most people have is to add mother as a fixed effect, as in a two-way ANOVA. In the equation, the term for mother is really 28 coefficients: one per mother, minus the reference mother. On the next slide, this whole term is replaced by a single random intercept.
 
 [click] And it works: once we adjust for mother, the sex effect becomes significant.
 
@@ -1052,6 +1056,56 @@ The population average: how does the proportion change across the whole populati
 With a logit link the two differ: the population-average effect is always smaller, closer to zero. Compare the two percentages for session 8.
 
 [click] To get the population average, you can average the GLMM predictions over the random effects, as we did on "One thing to remember", or fit a marginal model such as GEE, generalized estimating equations. GEE models the population-average effect directly and treats the correlation within individuals as a nuisance, without random effects. For a logistic random-intercept model there is a handy approximation from Zeger, Liang and Albert (1988): divide the coefficient by the square root of 1 plus 0.346 times the random-intercept variance. In a linear mixed model, the two are the same.
+:::
+
+## Annex: one study, two questions {.smaller visibility="uncounted"}
+
+:::: v-stack
+
+**Example:** a word-learning training for toddlers. Each child is tested on 20 trials before and after the training: did the child look at the named object (1) or not (0)?
+
+::::: {.columns}
+
+::: {.column width="50%"}
+::: {.callout-note}
+## The developmental psychologist
+*"Does the training help a child learn words?"*
+
+- Interested in the **learning process within a child**
+- Compares the same child before and after
+- **Typical individual:** read the GLMM coefficient directly, as an odds ratio for a given child
+:::
+:::
+
+::: {.column width="50%" .fragment}
+::: {.callout-tip}
+## The daycare network
+*"If we offer the training in all our centres, how many more children will recognise the words?"*
+
+- Interested in the **share of children** who succeed
+- Plans for the whole population, good and poor learners alike
+- **Population average:** average the GLMM predictions over children, or fit a GEE
+:::
+:::
+
+:::::
+
+::: {.callout-important .fragment}
+Same data, same model, two valid questions. The population-average effect is **smaller** than the typical-child effect, so always say **which one** you report.
+:::
+
+::::
+
+::: {.notes}
+Only if asked for an example where both questions matter.
+
+Imagine a word-learning training for toddlers, with 20 looking trials per child before and after the training.
+
+A developmental psychologist asks: does the training help a child learn? That is a question about the process within a child, so the typical-individual effect is what she wants, and the GLMM gives it directly as an odds ratio.
+
+[click] A network of daycare centres asks something else: if we offer the training everywhere, how many more children will recognise the words? That is a question about the share of children, good and poor learners together, so they need the population average: average the GLMM predictions over children, or fit a GEE.
+
+[click] Same data, same model, two valid questions. With a logit link the population-average effect is smaller, so in a paper always say which one you report.
 :::
 
 ## Annex: fixed or random? {.smaller visibility="uncounted"}

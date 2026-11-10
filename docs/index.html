@@ -1011,6 +1011,9 @@ y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n + \epsilon
 <section id="option-1-mother-as-a-fixed-effect" class="slide level2 smaller">
 <h2>Option 1: mother as a fixed effect?</h2>
 <div class="v-stack">
+<p><span class="math display">\[
+y_{ij} = \beta_0 + \underbrace{\beta_1 \, \text{mother}_i}_{28 \text{ parameters}} + \beta_2 \, \text{sex}_{ij} + \epsilon_{ij}, \qquad \epsilon_{ij} \sim N(0, \sigma^2)
+\]</span></p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="fu">anova</span>(<span class="fu">lm</span>(dors <span class="sc">~</span> mother <span class="sc">+</span> sex, <span class="at">data =</span> lizard))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="columns v-center">
 <div class="column" style="width:55%;">
@@ -1533,7 +1536,7 @@ y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n + \epsilon
 </div>
 <aside class="notes">
 <p>⏱ Target: 0:50 (finish by 7:20)</p>
-<p>The first idea most people have is to add mother as a fixed effect, as in a two-way ANOVA.</p>
+<p>The first idea most people have is to add mother as a fixed effect, as in a two-way ANOVA. In the equation, the term for mother is really 28 coefficients: one per mother, minus the reference mother. On the next slide, this whole term is replaced by a single random intercept.</p>
 <p>[click] And it works: once we adjust for mother, the sex effect becomes significant.</p>
 <p>[click] But look at the degrees of freedom for mother: 28 parameters, just to describe the mothers.</p>
 <p>[click] And we are not interested in these particular 29 mothers. We want to say something about lizard mothers in general.</p>
@@ -3950,6 +3953,81 @@ y^*_{ij} = \beta_0 + b_i + \beta_1 \, \text{session}_{ij} + \epsilon_{ij}, \qqua
 <p>The population average: how does the proportion change across the whole population? Here we average over all individuals, the very good and the very poor. That is what you want for statements like “what share of infants look at the target”.</p>
 <p>With a logit link the two differ: the population-average effect is always smaller, closer to zero. Compare the two percentages for session 8.</p>
 <p>[click] To get the population average, you can average the GLMM predictions over the random effects, as we did on “One thing to remember”, or fit a marginal model such as GEE, generalized estimating equations. GEE models the population-average effect directly and treats the correlation within individuals as a nuisance, without random effects. For a logistic random-intercept model there is a handy approximation from Zeger, Liang and Albert (1988): divide the coefficient by the square root of 1 plus 0.346 times the random-intercept variance. In a linear mixed model, the two are the same.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="annex-one-study-two-questions" class="slide level2 smaller" data-visibility="uncounted">
+<h2>Annex: one study, two questions</h2>
+<div class="v-stack">
+<p><strong>Example:</strong> a word-learning training for toddlers. Each child is tested on 20 trials before and after the training: did the child look at the named object (1) or not (0)?</p>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="callout callout-note callout-titled callout-style-simple">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>The developmental psychologist</strong></p>
+</div>
+<div class="callout-content">
+<p><em>“Does the training help a child learn words?”</em></p>
+<ul>
+<li>Interested in the <strong>learning process within a child</strong></li>
+<li>Compares the same child before and after</li>
+<li><strong>Typical individual:</strong> read the GLMM coefficient directly, as an odds ratio for a given child</li>
+</ul>
+</div>
+</div>
+</div>
+</div><div class="column fragment" style="width:50%;">
+<div class="callout callout-tip callout-titled callout-style-simple">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>The daycare network</strong></p>
+</div>
+<div class="callout-content">
+<p><em>“If we offer the training in all our centres, how many more children will recognise the words?”</em></p>
+<ul>
+<li>Interested in the <strong>share of children</strong> who succeed</li>
+<li>Plans for the whole population, good and poor learners alike</li>
+<li><strong>Population average:</strong> average the GLMM predictions over children, or fit a GEE</li>
+</ul>
+</div>
+</div>
+</div>
+</div></div>
+<div class="fragment">
+<div class="callout callout-important callout-style-simple">
+<div class="callout-body">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-content">
+<p>Same data, same model, two valid questions. The population-average effect is <strong>smaller</strong> than the typical-child effect, so always say <strong>which one</strong> you report.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<aside class="notes">
+<p>Only if asked for an example where both questions matter.</p>
+<p>Imagine a word-learning training for toddlers, with 20 looking trials per child before and after the training.</p>
+<p>A developmental psychologist asks: does the training help a child learn? That is a question about the process within a child, so the typical-individual effect is what she wants, and the GLMM gives it directly as an odds ratio.</p>
+<p>[click] A network of daycare centres asks something else: if we offer the training everywhere, how many more children will recognise the words? That is a question about the share of children, good and poor learners together, so they need the population average: average the GLMM predictions over children, or fit a GEE.</p>
+<p>[click] Same data, same model, two valid questions. With a logit link the population-average effect is smaller, so in a paper always say which one you report.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
