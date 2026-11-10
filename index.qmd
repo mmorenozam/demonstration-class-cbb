@@ -480,7 +480,7 @@ anova(lm(dors ~ mother + sex, data = lizard))
 
 ::::: {.columns .v-center}
 
-::: {.column width="55%"}
+::: {.column width="55%" .fragment}
 ```{r}
 #| label: tab-anova
 a_tab <- anova(fit_fixed)
